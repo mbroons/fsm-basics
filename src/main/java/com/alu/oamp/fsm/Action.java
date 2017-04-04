@@ -2,7 +2,7 @@ package com.alu.oamp.fsm;
 
 /**
  *
- * A state machine transaction action with an input value.
+ * A state machine transition action with an input value.
  *
  * @param <T>
  *            the input parameter type
