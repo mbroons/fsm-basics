@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="JSC">
+	<test name="Regression" verbose="2">
+		<packages>
+			<package name="com.alu.ice.oamp.*"/>
+		</packages>
+	</test>
+</suite>
