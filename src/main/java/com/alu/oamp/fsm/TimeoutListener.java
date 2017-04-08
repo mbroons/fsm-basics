@@ -4,7 +4,7 @@ package com.alu.oamp.fsm;
  * An active state listener.
  *
  */
-public interface ActiveStateListener {
+public interface TimeoutListener {
 
 	/**
 	 * Invoked when the state has timed out.

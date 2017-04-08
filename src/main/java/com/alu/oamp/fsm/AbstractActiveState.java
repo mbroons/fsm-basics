@@ -11,7 +11,7 @@ public abstract class AbstractActiveState implements ActiveState {
 
     protected final State state;
     protected TimerProvider provider;
-    protected ActiveStateListener listener;
+    protected TimeoutListener listener;
     protected Timer timer;
 
     /**
@@ -58,7 +58,7 @@ public abstract class AbstractActiveState implements ActiveState {
     }
 
     @Override
-    public void setActiveStateListener(ActiveStateListener listener) {
+    public void setActiveStateListener(TimeoutListener listener) {
         if (state instanceof ActiveState) {
             ((ActiveState) state).setActiveStateListener(listener);
         }

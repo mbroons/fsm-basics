@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * This is a simple state machine simulating a lift door.
- * <p/>
- * States are [Opened; Closed; Opened and Ringing]
+ * <p>
+ * States are [Opened; Closed; Opened_and_Ringing]
  * and 1 command for the door: Open the door.
- * <p/>
+ * <p>
  * Several scenario are tested.
  */
 public class FiniteStateMachineTest {
@@ -46,23 +46,14 @@ public class FiniteStateMachineTest {
         Set<State> states = new HashSet<>();
 
         // The door stays opened for 500 ms and closes itself.
-        State state =
-                States.newBuilder(LiftDoorState.OPENED).onEntry(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        queue.offer(LiftDoorState.OPENED);
-                    }
-                }).timeout(500).timeoutTarget(LiftDoorState.CLOSED).build();
+        State state = States.newBuilder(LiftDoorState.OPENED)
+                .onEntry(() -> queue.offer(LiftDoorState.OPENED))
+                .timeout(500)
+                .timeoutTarget(LiftDoorState.CLOSED)
+                .build();
         states.add(state);
 
-        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(new Runnable() {
-
-            @Override
-            public void run() {
-                queue.offer(LiftDoorState.CLOSED);
-            }
-        }).build();
+        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(() -> queue.offer(LiftDoorState.CLOSED)).build();
         State initial = state;
         states.add(state);
 
@@ -77,57 +68,39 @@ public class FiniteStateMachineTest {
         fsm = new FiniteStateMachine(states, transitions, "Test", initial);
     }
 
-    private void initFsmWithMonitoring() {
+    private void initFsmWithHeartBeat() {
 
         Set<State> states = new HashSet<>();
 
-        // The opened state is exited when cell does not detect someone
-        // If Door is opened for more than one second, ring the bell
-        ExitCondition condition = new ExitCondition() {
-            @Override
-            public boolean apply() {
-                LOGGER.info("cell is: {}", cell);
-                return cell.isOff();
-            }
-        };
         State state =
-                States.newBuilder(LiftDoorState.OPENED).onEntry(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        cell.setOn();
-                        queue.offer(LiftDoorState.OPENED);
-                    }
-                }).monitoring(50).monitoringTarget(LiftDoorState.CLOSED).exitCondition(condition).timeout(1000)
-                        .timeoutTarget(LiftDoorState.OPENED_AND_RINGING).build();
-        states.add(state);
-
-        // Door is opened and ringing, when door closes stop the bell
-        Runnable exitAction = new Runnable() {
-            @Override
-            public void run() {
-                bell.stop();
-            }
-        };
-        state =
-                States.newBuilder(LiftDoorState.OPENED_AND_RINGING).onEntry(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        bell.ring();
-                        queue.offer(LiftDoorState.OPENED_AND_RINGING);
-                    }
-                }).monitoring(50).monitoringTarget(LiftDoorState.CLOSED).exitCondition(condition).exitAction(exitAction)
+                States.newBuilder(LiftDoorState.OPENED)
+                        .onEntry(() -> {
+                            cell.setOn();
+                            queue.offer(LiftDoorState.OPENED);
+                        })
+                        .heartBeatPeriod(50)
+                        .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
+                        .heartBeatWorker(() -> cell.isOff())
+                        .timeout(1000)
+                        .timeoutTarget(LiftDoorState.OPENED_AND_RINGING)
                         .build();
         states.add(state);
 
-        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(new Runnable() {
+        // Door is opened and ringing, when door closes stop the bell
+        state =
+                States.newBuilder(LiftDoorState.OPENED_AND_RINGING)
+                        .onEntry(() -> {
+                            bell.ring();
+                            queue.offer(LiftDoorState.OPENED_AND_RINGING);
+                        })
+                        .heartBeatPeriod(50)
+                        .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
+                        .heartBeatWorker(() -> cell.isOff())
+                        .exitAction(() -> bell.stop())
+                        .build();
+        states.add(state);
 
-            @Override
-            public void run() {
-                queue.offer(LiftDoorState.CLOSED);
-            }
-        }).build();
+        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(() -> queue.offer(LiftDoorState.CLOSED)).build();
         State initial = state;
         states.add(state);
 
@@ -145,34 +118,22 @@ public class FiniteStateMachineTest {
 
         Set<State> states = new HashSet<>();
 
-        // The opened state is exited when cell does not detect someone
-        // If Door is opened for more than one second, ring the bell
-        ExitCondition cellIsOff = new ExitCondition() {
-            @Override
-            public boolean apply() {
-                LOGGER.info("cell is: {}", cell);
-                return cell.isOff();
-            }
-        };
-        State state =
-                States.newBuilder(LiftDoorState.OPENED).onEntry(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        cell.setOn();
-                        queue.offer(LiftDoorState.OPENED);
-                    }
-                }).monitoring(10).monitoringTarget(LiftDoorState.CLOSED).exitCondition(cellIsOff).timeout(1000)
-                        .timeoutTarget(LiftDoorState.CLOSED).build();
+        State state = States.newBuilder(LiftDoorState.OPENED)
+                .onEntry(() -> {
+                    cell.setOn();
+                    queue.offer(LiftDoorState.OPENED);
+                })
+                .heartBeatPeriod(10)
+                .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
+                .heartBeatWorker(() -> {
+                    LOGGER.info("cell is: {}", cell);
+                    return cell.isOff();
+                })
+                .timeout(1000)
+                .timeoutTarget(LiftDoorState.CLOSED).build();
         states.add(state);
 
-        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(new Runnable() {
-
-            @Override
-            public void run() {
-                queue.offer(LiftDoorState.CLOSED);
-            }
-        }).build();
+        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(() -> queue.offer(LiftDoorState.CLOSED)).build();
         State initial = state;
         states.add(state);
 
@@ -198,8 +159,8 @@ public class FiniteStateMachineTest {
     }
 
     @Test
-    public void testFsmWithMonitoring() throws InterruptedException {
-        initFsmWithMonitoring();
+    public void testFsmWithHeartBeat() throws InterruptedException {
+        initFsmWithHeartBeat();
 
         // Open the door
         fsm.fireEvent(Cmd.OPEN);
@@ -263,8 +224,11 @@ public class FiniteStateMachineTest {
 
         @Override
         public String toString() {
-            if (on) return "On";
-            else return "Off";
+            if (on) {
+                return "On";
+            } else {
+                return "Off";
+            }
         }
     }
 

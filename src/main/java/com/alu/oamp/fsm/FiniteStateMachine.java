@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
  * when the state exits.
  * </p>
  */
-public class FiniteStateMachine implements ActiveStateListener {
+public class FiniteStateMachine implements TimeoutListener {
 
 	/**
 	 * State machine internal events
@@ -88,7 +88,7 @@ public class FiniteStateMachine implements ActiveStateListener {
 	private final Map<Enum<?>, State> states = new HashMap<>();
 	private final Map<Enum<?>, Map<Enum<?>, Transition>> transitionMap =
 		new HashMap<>();
-	private final EventProcessor evtPcor;
+	private final EventProcessor eventProcessor;
 	private State current;
 	final String name;
 
@@ -116,7 +116,7 @@ public class FiniteStateMachine implements ActiveStateListener {
 		for (State state : states) {
 			this.states.put(state.getId(), state);
 			transitionMap.put(state.getId(),
-				new HashMap<Enum<?>, Transition>());
+					new HashMap<>());
 
 			if (state instanceof ActiveState) {
 				((ActiveState) state).setActiveStateListener(this);
@@ -137,7 +137,7 @@ public class FiniteStateMachine implements ActiveStateListener {
 				.put(trans.getEventId(), trans);
 		}
 		this.current = initial;
-		evtPcor = new EventProcessor("FSM " + name);
+		eventProcessor = new EventProcessor("FSM " + name);
 	}
 
 	@Override
@@ -159,7 +159,7 @@ public class FiniteStateMachine implements ActiveStateListener {
 				((ActiveState) state).shutdown();
 			}
 		}
-		evtPcor.shutdown();
+		eventProcessor.shutdown();
 	}
 
 	/**
@@ -188,8 +188,8 @@ public class FiniteStateMachine implements ActiveStateListener {
 
 	private void fireEvent(Event event) {
 
-		if (!evtPcor.isShutdown()) {
-			evtPcor.send(event);
+		if (!eventProcessor.isShutdown()) {
+			eventProcessor.send(event);
 		}
 	}
 
@@ -311,8 +311,8 @@ public class FiniteStateMachine implements ActiveStateListener {
 	public void disableTimers(TimerProvider timerProvider) {
 
 		for (State state : states.values()) {
-			if (state instanceof StateWithExitCondition) {
-				((StateWithExitCondition) state).setProvider(timerProvider);
+			if (state instanceof StateWithHeartBeat) {
+				((StateWithHeartBeat) state).setProvider(timerProvider);
 			}
 			if (state instanceof StateWithTimeout) {
 				((StateWithTimeout) state).setProvider(timerProvider);
@@ -352,7 +352,7 @@ public class FiniteStateMachine implements ActiveStateListener {
 			throw new IllegalStateException(
 				"No transition found for event " + event);
 		}
-		evtPcor.onMessage(event);
+		eventProcessor.onMessage(event);
 	}
 
 }

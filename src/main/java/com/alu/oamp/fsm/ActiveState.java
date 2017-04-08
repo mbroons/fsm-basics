@@ -24,7 +24,7 @@ public interface ActiveState extends State {
 	 * @param listener
 	 *            the active state listener
 	 */
-	void setActiveStateListener(ActiveStateListener listener);
+	void setActiveStateListener(TimeoutListener listener);
 
 	/**
 	 * Returns the state internal transitions.

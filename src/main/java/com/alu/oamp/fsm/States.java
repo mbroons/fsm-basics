@@ -1,5 +1,7 @@
 package com.alu.oamp.fsm;
 
+import java.util.function.BooleanSupplier;
+
 /**
  * Utility class to create states.
  *
@@ -37,7 +39,7 @@ public class States {
         private Runnable onTimeout;
 
         private long period;
-        private ExitCondition exitCondition;
+        private BooleanSupplier heartBeatWorker;
         private Runnable exitAction;
         private Enum<?> exitStateId;
 
@@ -109,19 +111,19 @@ public class States {
          * @param period the monitoring period
          * @return the state builder
          */
-        public Builder monitoring(long period) {
+        public Builder heartBeatPeriod(long period) {
             this.period = period;
             return this;
         }
 
         /**
-         * Specifies the exit monitoring condition.
+         * Specifies the heart beat worker
          *
-         * @param exitCondition the exit monitoring condition
+         * @param heartBeatWorker the heart beat worker.
          * @return the state builder
          */
-        public Builder exitCondition(ExitCondition exitCondition) {
-            this.exitCondition = exitCondition;
+        public Builder heartBeatWorker(BooleanSupplier heartBeatWorker) {
+            this.heartBeatWorker = heartBeatWorker;
             return this;
         }
 
@@ -138,13 +140,12 @@ public class States {
         }
 
         /**
-         * Specifies the target state when the state is exited due
-         * to monitoring.
+         * Specifies the target state when the state has exited due to time out on heart beat.
          *
          * @param exitStateId the target state
          * @return the state builder
          */
-        public Builder monitoringTarget(Enum<?> exitStateId) {
+        public Builder heartBeatTimeoutTarget(Enum<?> exitStateId) {
             this.exitStateId = exitStateId;
             return this;
         }
@@ -161,8 +162,8 @@ public class States {
             if (period != 0) {
                 // This is a state with monitoring
                 checkNotNull(exitStateId, "Target state for monitored state can't be null");
-                checkNotNull(exitCondition, "Monitored state exit condition can't be null");
-                built = new StateWithExitCondition(state, period, exitStateId, exitCondition, exitAction);
+                checkNotNull(heartBeatWorker, "State with heart beat can't have null heart beat worker");
+                built = new StateWithHeartBeat(state, period, exitStateId, heartBeatWorker, exitAction);
             }
 			
 			if (timeout != 0) {
