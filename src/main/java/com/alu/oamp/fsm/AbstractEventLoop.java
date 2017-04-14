@@ -12,28 +12,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An emulation of a single threaded scala actor.
+ * An abstract event loop.
  *
- * The actor embeds a single threaded executor service. The client applications
- * sends the messages to be processed by the actor using the send method. The
- * message sent is processed by the background thread by the onMessage method.
+ * The event loop is single threaded and treats messages of type T.
  *
- * A concrete implementation of the actor has to subclass the onMessage method
+ * The client applications sends the messages to be processed by the event loop using the send method.
+ * The message sent is processed by the background thread by the onMessage method.
+ *
+ * A concrete implementation of the event loop has to subclass the onMessage method
  * to implement the message processing.
  *
- * The actor is stopped using the shutdown method.
+ * The event loop is stopped using the shutdown method.
  *
  * @param <T>
- *            the message sent to the actor
+ *            the message sent to the event loop.
  *
  * @author tvillard
  *
  */
-public abstract class Actor<T> {
+public abstract class AbstractEventLoop<T> {
 	private static final int DEFAULT_CAPACITY = 1000;
 	private static final int DEFAULT_SHUTDOWN_DELAY = 5;
 	// No static logger in libraries
-	private final Logger logger = LoggerFactory.getLogger(Actor.class);
+	private final Logger logger = LoggerFactory.getLogger(AbstractEventLoop.class);
 
 	private final ExecutorService exec;
 	private final int shutdownDelay;
@@ -51,7 +52,7 @@ public abstract class Actor<T> {
 	 *            When messages are sent beyond the actor capacity, the message
 	 *            are discarded.
 	 */
-	public Actor(int capacity, Class<?> clazz, int shutdownDelay) {
+	public AbstractEventLoop(int capacity, Class<?> clazz, int shutdownDelay) {
 		this(capacity, clazz.getSimpleName(), shutdownDelay);
 	}
 	
@@ -63,7 +64,7 @@ public abstract class Actor<T> {
 	 * @param clazz
 	 *            the actor concrete class (which gives the actor thread name).
 	 */
-	public Actor(int capacity, Class<?> clazz) {
+	public AbstractEventLoop(int capacity, Class<?> clazz) {
 		this(capacity, clazz, DEFAULT_SHUTDOWN_DELAY);
 	}
 
@@ -73,7 +74,7 @@ public abstract class Actor<T> {
 	 * @param clazz
 	 *            the actor concrete class (which gives the actor thread name).
 	 */
-	public Actor(Class<?> clazz) {
+	public AbstractEventLoop(Class<?> clazz) {
 		this(DEFAULT_CAPACITY, clazz, DEFAULT_SHUTDOWN_DELAY);
 	}
 
@@ -90,7 +91,7 @@ public abstract class Actor<T> {
 	 *            When messages are sent beyond the actor capacity, the message
 	 *            are discarded.
 	 */
-	public Actor(int capacity, String threadName, int shutdownDelay) {
+	public AbstractEventLoop(int capacity, String threadName, int shutdownDelay) {
 		if (capacity == 0) {
 			throw new IllegalArgumentException("capacity can't be 0");
 		}
@@ -108,7 +109,7 @@ public abstract class Actor<T> {
 	 * @param threadName
 	 *            the actor thread name
 	 */
-	public Actor(String threadName) {
+	public AbstractEventLoop(String threadName) {
 		this(DEFAULT_CAPACITY, threadName, DEFAULT_SHUTDOWN_DELAY);
 	}
 
@@ -122,7 +123,7 @@ public abstract class Actor<T> {
 			if (!exec.awaitTermination(shutdownDelay, TimeUnit.SECONDS)) {
 				exec.shutdownNow();
 				if (!exec.awaitTermination(shutdownDelay, TimeUnit.SECONDS)) {
-					logger.error("Actor failed to shutdown");
+					logger.error("AbstractEventLoop failed to shutdown");
 				}
 			}
 		} catch (InterruptedException ex) {
@@ -149,7 +150,7 @@ public abstract class Actor<T> {
 	public void send(T message) {
 
 		if (exec.isShutdown()) {
-			throw new IllegalStateException("Actor is shutdown.");
+			throw new IllegalStateException("AbstractEventLoop is shutdown.");
 		}
 
 		exec.execute(new MessageProcessor(message));
@@ -182,7 +183,7 @@ public abstract class Actor<T> {
 	/**
 	 * processes the incoming messages.
 	 *
-	 * Actor concrete implementations have to implement this method
+	 * AbstractEventLoop concrete implementations have to implement this method
 	 *
 	 * @param message
 	 *            the received message
@@ -191,15 +192,11 @@ public abstract class Actor<T> {
 
 	private ExecutorService newExecutor(int capacity, final String threadName) {
 
-		ThreadFactory threadFactory = new ThreadFactory() {
-
-			@Override
-			public Thread newThread(Runnable runnable) {
-				Thread thread = new Thread(runnable, threadName);
-				thread.setUncaughtExceptionHandler(new UELogger());
-				return thread;
-			}
-		};
+		ThreadFactory threadFactory = runnable -> {
+            Thread thread = new Thread(runnable, threadName);
+            thread.setUncaughtExceptionHandler(new UELogger());
+            return thread;
+        };
 		BlockingQueue<Runnable> workQueue =
 				new ArrayBlockingQueue<>(capacity);
 		return new ThreadPoolExecutor(1, 1, 0L, TimeUnit.SECONDS, workQueue,

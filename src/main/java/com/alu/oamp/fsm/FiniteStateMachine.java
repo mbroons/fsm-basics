@@ -196,7 +196,7 @@ public class FiniteStateMachine implements TimeoutListener {
 	/**
 	 * A control event processor.
 	 */
-	private class EventProcessor extends Actor<Event> {
+	private class EventProcessor extends AbstractEventLoop<Event> {
 
 		/**
 		 * Creates a new notification processor.
