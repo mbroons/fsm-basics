@@ -24,7 +24,7 @@ public abstract class AbstractActiveState implements ActiveState {
     }
 
     @Override
-    public Enum<?> getId() {
+    public StateId getId() {
         return state.getId();
     }
 

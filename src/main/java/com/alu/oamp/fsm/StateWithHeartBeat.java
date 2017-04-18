@@ -9,16 +9,16 @@ import java.util.function.BooleanSupplier;
  * A state with heart beat.
  * <p/>
  * <p>
- * The state remains active as long as the heart beat reports an ok status
+ * The state remains active as long as the heart beat worker returns true.
  * </p>
- * <p/>
- * The state is active as long as the exit condition is not true
- * <p/>
+ * <p>
+ * When heart beat fails, the state is exited and the state identified by the target state id is entered
+ * </p>
  */
 public class StateWithHeartBeat extends AbstractActiveState {
 
 	private final long period;
-	private final Enum<?> exitStateId;
+	private final StateId targetStateId;
 	private final BooleanSupplier heartBeatWorker;
 	private final Runnable exitAction;
 
@@ -29,20 +29,20 @@ public class StateWithHeartBeat extends AbstractActiveState {
 	 *            the inner state.
 	 * @param period
 	 *            the heart beat polling period
-	 * @param worker
-	 *            the heart beat operation
+	 * @param heartBeatWorker
+	 *            the heart beat worker.
 	 * @param exitAction
 	 *            the action to perform on exit
-	 * @param exitStateId
-	 *            the target state to enter.
+	 * @param targetStateId
+	 *            the target state on heart beat error..
 	 */
-	StateWithHeartBeat(State innerState, long period, Enum<?> exitStateId,
-					   BooleanSupplier worker, Runnable exitAction) {
+	StateWithHeartBeat(State innerState, long period, StateId targetStateId,
+					   BooleanSupplier heartBeatWorker, Runnable exitAction) {
         super(innerState);
         this.period = period;
-        this.heartBeatWorker = worker;
+        this.heartBeatWorker = heartBeatWorker;
         this.exitAction = exitAction;
-        this.exitStateId = exitStateId;
+        this.targetStateId = targetStateId;
         provider = () -> new Timer("Monitor " + state.toString());
     }
 
@@ -54,7 +54,7 @@ public class StateWithHeartBeat extends AbstractActiveState {
 		TimerTask runHeartBeat = new TimerTask() {
 			public void run() {
 				if (heartBeatWorker.getAsBoolean()) {
-					listener.onExitMonitoring();
+					listener.onHeartBeatError();
 					timer.cancel();
 				}
 			}
@@ -69,8 +69,8 @@ public class StateWithHeartBeat extends AbstractActiveState {
 
 		// add exit monitoring transition
 		transitions.add(Transition.newBuilder(states).from(getId())
-			.event(FiniteStateMachine.InternalEvent.EXIT_MONITORING)
-			.to(exitStateId).action(exitAction).build());
+			.event(SimpleStateMachine.InternalEvent.HEARTBEAT_ERROR)
+			.to(targetStateId).action(exitAction).build());
 		return transitions;
 	}
 }

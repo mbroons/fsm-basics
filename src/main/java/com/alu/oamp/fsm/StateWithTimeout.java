@@ -11,7 +11,7 @@ public class StateWithTimeout extends AbstractActiveState {
 
     private final long timeout;
     private final Runnable timeoutAction;
-    private final Enum<?> timeoutStateId;
+    private final StateId timeoutStateId;
 
     /**
      * Creates a new state with timeout.
@@ -22,17 +22,12 @@ public class StateWithTimeout extends AbstractActiveState {
      * @param timeoutStateId the target state on timeout
      */
     StateWithTimeout(State innerState, long timeout, Runnable timeoutAction,
-                     Enum<?> timeoutStateId) {
+                     StateId timeoutStateId) {
         super(innerState);
         this.timeout = timeout;
         this.timeoutAction = timeoutAction;
         this.timeoutStateId = timeoutStateId;
-        provider = new TimerProvider() {
-            @Override
-            public Timer get() {
-                return new Timer("Timer " + state.toString());
-            }
-        };
+        provider = () -> new Timer("Timer " + state.toString());
     }
 
     @Override
@@ -57,7 +52,7 @@ public class StateWithTimeout extends AbstractActiveState {
 
         // add exit monitoring transition
         transitions.add(Transition.newBuilder(states).from(getId())
-                .event(FiniteStateMachine.InternalEvent.TIMEOUT)
+                .event(SimpleStateMachine.InternalEvent.TIMEOUT)
                 .to(timeoutStateId)
                 .action(timeoutAction).build());
         return transitions;

@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
-public class AbstractEventLoopTest {
+public class EventLoopTest {
 	
 	@Test
 	public void testStartStop() {
@@ -30,33 +30,33 @@ public class AbstractEventLoopTest {
 	@Test
 	public void testTasksInException() {
 		
-		ErrorEventLoop eWorker = new ErrorEventLoop();
-		eWorker.send("Msg #1");
-		eWorker.send("Msg #2");
-		eWorker.shutdown();
-		Assert.assertTrue(eWorker.isShutdown());
+		BrokenEventLoop bel = new BrokenEventLoop();
+		bel.send("Msg #1");
+		bel.send("Msg #2");
+		bel.shutdown();
+		Assert.assertTrue(bel.isShutdown());
 	}
 	
 	@Test
 	public void testSleepingTasks() {
 		
-		SleepingEventLoop sWorker = new SleepingEventLoop(10);
-		sWorker.send("Msg #1");
-		sWorker.send("Msg #2");
-		sWorker.shutdown();
-		Assert.assertTrue(sWorker.isShutdown());
+		SleepingEventLoop sel = new SleepingEventLoop(10);
+		sel.send("Msg #1");
+		sel.send("Msg #2");
+		sel.shutdown();
+		Assert.assertTrue(sel.isShutdown());
 	}
 	
 	@Test
 	public void testRejectedExecution() {
 		
-		SleepingEventLoop actor = new SleepingEventLoop(2);
-		actor.send("Msg #1");
-		actor.send("Msg #2");
-		actor.send("Msg #3");
-		actor.send("Msg #4");
-		actor.shutdown();
-		Assert.assertTrue(actor.isShutdown());
+		SleepingEventLoop sel = new SleepingEventLoop(2);
+		sel.send("Msg #1");
+		sel.send("Msg #2");
+		sel.send("Msg #3");
+		sel.send("Msg #4");
+		sel.shutdown();
+		Assert.assertTrue(sel.isShutdown());
 	}
 	
 	@Test(expectedExceptions=IllegalArgumentException.class)
@@ -90,16 +90,16 @@ public class AbstractEventLoopTest {
 		
 	}
 	
-	public static class ErrorEventLoop extends AbstractEventLoop<String> {
+	public static class BrokenEventLoop extends AbstractEventLoop<String> {
 		
-		public ErrorEventLoop() {
-			super(ErrorEventLoop.class);
+		public BrokenEventLoop() {
+			super(BrokenEventLoop.class);
 		}
 
 		@Override
 		protected void onMessage(String msg) {
 			
-			throw new RuntimeException("I failed folks...");
+			throw new RuntimeException("I broke folks...");
 		}
 	}
 	

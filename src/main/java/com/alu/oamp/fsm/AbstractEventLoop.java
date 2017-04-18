@@ -16,13 +16,14 @@ import org.slf4j.LoggerFactory;
  *
  * The event loop is single threaded and treats messages of type T.
  *
- * The client applications sends the messages to be processed by the event loop using the send method.
+ * The client applications sends the message to be processed by the event loop using the send method.
  * The message sent is processed by the background thread by the onMessage method.
  *
  * A concrete implementation of the event loop has to subclass the onMessage method
  * to implement the message processing.
  *
  * The event loop is stopped using the shutdown method.
+ *
  *
  * @param <T>
  *            the message sent to the event loop.
@@ -43,13 +44,13 @@ public abstract class AbstractEventLoop<T> {
 	 * Creates a new actor.
 	 *
 	 * @param capacity
-	 *            the actor capacity.
+	 *            the event loop queue capacity.
 	 * @param shutdownDelay
 	 *            the shutdown delay.
 	 * @param clazz
-	 *            the actor concrete class (which gives the actor thread name).
+	 *            the event loop concrete class (which gives the event loop thread name).
 	 *
-	 *            When messages are sent beyond the actor capacity, the message
+	 *            When messages are produced beyond the event loop queue capacity, the message
 	 *            are discarded.
 	 */
 	public AbstractEventLoop(int capacity, Class<?> clazz, int shutdownDelay) {
@@ -60,9 +61,9 @@ public abstract class AbstractEventLoop<T> {
 	 * Creates a new actor.
 	 * 
 	 * @param capacity
-	 *            the actor capacity.
+	 *            the event loop queue capacity.
 	 * @param clazz
-	 *            the actor concrete class (which gives the actor thread name).
+	 *            the event loop concrete class (which gives the event loop thread name).
 	 */
 	public AbstractEventLoop(int capacity, Class<?> clazz) {
 		this(capacity, clazz, DEFAULT_SHUTDOWN_DELAY);
@@ -82,14 +83,12 @@ public abstract class AbstractEventLoop<T> {
 	 * Creates a new actor.
 	 *
 	 * @param capacity
-	 *            the actor capacity.
+	 *            the event loop queue capacity.
 	 * @param shutdownDelay
-	 *            the actor shutdown delay.
+	 *            the event loop shutdown delay.
 	 * @param threadName
-	 *            the actor thread name.
+	 *            the event loop thread name.
 	 *
-	 *            When messages are sent beyond the actor capacity, the message
-	 *            are discarded.
 	 */
 	public AbstractEventLoop(int capacity, String threadName, int shutdownDelay) {
 		if (capacity == 0) {
@@ -231,7 +230,7 @@ public abstract class AbstractEventLoop<T> {
 
 			@SuppressWarnings("unchecked")
 			MessageProcessor processor = (MessageProcessor) runnable;
-			logger.error("Task is rejected, actor queue may be full");
+			logger.error("Task is rejected, event loop queue might be full");
 			logger.error("Rejected message: {}", processor.getMessage());
 		}
 	}

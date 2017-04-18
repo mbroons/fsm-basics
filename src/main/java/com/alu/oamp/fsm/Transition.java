@@ -17,7 +17,7 @@ public class Transition {
 		LoggerFactory.getLogger(Transition.class);
 
 	private final State toState;
-	private final Enum<?> eventId;
+	private final EventId eventId;
 	private final State fromState;
 	private final Object action;
 
@@ -33,7 +33,7 @@ public class Transition {
 	 * @param action
 	 *            the action to execute
 	 */
-	private Transition(State fromState, Enum<?> eventId, State toState,
+	private Transition(State fromState, EventId eventId, State toState,
 			Object action) {
 		this.fromState = fromState;
 		this.eventId = eventId;
@@ -55,7 +55,7 @@ public class Transition {
 	 *
 	 * @return the transition event id
 	 */
-	Enum<?> getEventId() {
+	EventId getEventId() {
 		return eventId;
 	}
 
@@ -86,7 +86,7 @@ public class Transition {
 	 *            the state machine event
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	void run(FiniteStateMachine.Event event) {
+	void run(SimpleStateMachine.Event event) {
 
 		if (action != null) {
 			try {
@@ -110,7 +110,7 @@ public class Transition {
 	 */
 	@SuppressWarnings("synthetic-access")
 	public static Builder newBuilder(Set<State> states) {
-		Map<Enum<?>, State> map = new HashMap<>();
+		Map<StateId, State> map = new HashMap<>();
 		for (State state : states) {
 			map.put(state.getId(), state);
 		}
@@ -123,17 +123,17 @@ public class Transition {
 	 */
 	public static class Builder {
 
-		private final Map<Enum<?>, State> map;
+		private final Map<StateId, State> map;
 		private State toState;
-		private Enum<?> eventId;
+		private EventId eventId;
 		private State fromState;
 		private Object action;
 
-		private Builder(Map<Enum<?>, State> map) {
+		private Builder(Map<StateId, State> map) {
 			this.map = map;
 		}
 
-		private void checkArgument(Enum<?> stateId) {
+		private void checkArgument(StateId stateId) {
 			if (map.get(stateId) == null) {
 				throw new IllegalArgumentException(
 					"No state with id: " + stateId);
@@ -173,7 +173,7 @@ public class Transition {
 		 *            the state id
 		 * @return the builder
 		 */
-		public Builder from(Enum<?> stateId) {
+		public Builder from(StateId stateId) {
 			checkArgument(stateId);
 			this.fromState = map.get(stateId);
 			return this;
@@ -188,7 +188,7 @@ public class Transition {
 		 *            the state id
 		 * @return the builder
 		 */
-		public Builder to(Enum<?> stateId) {
+		public Builder to(StateId stateId) {
 			checkArgument(stateId);
 			this.toState = map.get(stateId);
 			return this;
@@ -201,7 +201,7 @@ public class Transition {
 		 *            the event id
 		 * @return the builder
 		 */
-		public Builder event(Enum<?> eventId) {
+		public Builder event(EventId eventId) {
 			this.eventId = eventId;
 			return this;
 		}

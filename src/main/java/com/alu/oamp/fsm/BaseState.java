@@ -11,7 +11,7 @@ public class BaseState implements State {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseState.class);
 
-	private final Enum<?> stateId;
+	private final StateId stateId;
 	private final Runnable onEntry;
 	private final Runnable onExit;
 
@@ -25,14 +25,14 @@ public class BaseState implements State {
 	 * @param onExit
 	 *            the runnable to execute on exiting the state
 	 */
-	BaseState(Enum<?> stateId, Runnable onEntry, Runnable onExit) {
+	BaseState(StateId stateId, Runnable onEntry, Runnable onExit) {
 		this.stateId = stateId;
 		this.onEntry = onEntry;
 		this.onExit = onExit;
 	}
 
 	@Override
-	public Enum<?> getId() {
+	public StateId getId() {
 		return stateId;
 	}
 

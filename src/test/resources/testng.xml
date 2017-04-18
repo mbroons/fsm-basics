@@ -2,7 +2,7 @@
 <suite name="JSC">
 	<test name="Regression" verbose="2">
 		<packages>
-			<package name="com.alu.ice.oamp.*"/>
+			<package name="com.alu.oamp.*"/>
 		</packages>
 	</test>
 </suite>

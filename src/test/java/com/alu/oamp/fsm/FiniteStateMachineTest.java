@@ -3,6 +3,7 @@ package com.alu.oamp.fsm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import java.util.HashSet;
@@ -24,17 +25,22 @@ public class FiniteStateMachineTest {
     private static final Logger LOGGER = LoggerFactory
             .getLogger(FiniteStateMachineTest.class);
 
-    private FiniteStateMachine fsm;
+    private SimpleStateMachine fsm;
     private BlockingQueue<LiftDoorState> queue =
             new LinkedBlockingQueue<>();
     private Cell cell = new Cell();
     private Bell bell = new Bell();
 
-    enum Cmd {
+    @AfterMethod
+    public void tearDown() {
+        fsm.shutdown();
+    }
+
+    enum Cmd implements EventId {
         OPEN
     }
 
-    enum LiftDoorState {
+    enum LiftDoorState implements StateId {
 
         OPENED,
         OPENED_AND_RINGING,
@@ -65,7 +71,7 @@ public class FiniteStateMachineTest {
                         .event(Cmd.OPEN).to(LiftDoorState.OPENED).build();
         transitions.add(transition);
 
-        fsm = new FiniteStateMachine(states, transitions, "Test", initial);
+        fsm = new SimpleStateMachine(states, transitions, "Test", initial);
     }
 
     private void initFsmWithHeartBeat() {
@@ -111,7 +117,7 @@ public class FiniteStateMachineTest {
                         .event(Cmd.OPEN).to(LiftDoorState.OPENED).build();
         transitions.add(transition);
 
-        fsm = new FiniteStateMachine(states, transitions, "Test", initial);
+        fsm = new SimpleStateMachine(states, transitions, "Test", initial);
     }
 
     private void initFsmForActiveState() {
@@ -123,6 +129,7 @@ public class FiniteStateMachineTest {
                     cell.setOn();
                     queue.offer(LiftDoorState.OPENED);
                 })
+                .onExit(() -> LOGGER.info("Exiting Opened state..."))
                 .heartBeatPeriod(10)
                 .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
                 .heartBeatWorker(() -> {
@@ -145,7 +152,7 @@ public class FiniteStateMachineTest {
         transitions.add(transition);
 
 
-        fsm = new FiniteStateMachine(states, transitions, "Test", initial);
+        fsm = new SimpleStateMachine(states, transitions, "Test", initial);
     }
 
     @Test

@@ -10,7 +10,7 @@ public interface State {
 	 * Returns the state id.
 	 * @return the state id.
 	 */
-	Enum<?> getId();
+	StateId getId();
 
 	/**
 	 * Invoked when the state is entered.

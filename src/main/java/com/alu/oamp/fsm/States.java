@@ -17,7 +17,7 @@ public class States {
 	 * @param stateId the state id
 	 * @return a new state builder.
 	 */
-	public static Builder newBuilder(Enum<?> stateId) {
+	public static Builder newBuilder(StateId stateId) {
 		return new Builder(stateId);
 	}
 	
@@ -30,24 +30,24 @@ public class States {
 	 */
 	public static class Builder {
 		
-		private final Enum<?> stateId;
+		private final StateId stateId;
 		private Runnable onEntry;
 		private Runnable onExit;
 
         private long timeout;
-        private Enum<?> timeoutStateId;
+        private StateId timeoutStateId;
         private Runnable onTimeout;
 
         private long period;
         private BooleanSupplier heartBeatWorker;
         private Runnable exitAction;
-        private Enum<?> exitStateId;
+        private StateId exitStateId;
 
 		/**
 		 * Creates a new state builder.
 		 * @param stateId the state id
 		 */
-		private Builder(Enum<?> stateId) {
+		private Builder(StateId stateId) {
 			checkNotNull(stateId, "State id can't be null");
 			this.stateId = stateId;
 		}
@@ -100,7 +100,7 @@ public class States {
 		 * @param targetStateId the target state on timeout
 		 * @return the state builder
 		 */
-		public Builder timeoutTarget(Enum<?> targetStateId) {
+		public Builder timeoutTarget(StateId targetStateId) {
 			this.timeoutStateId = targetStateId;
 			return this;
 		}
@@ -145,7 +145,7 @@ public class States {
          * @param exitStateId the target state
          * @return the state builder
          */
-        public Builder heartBeatTimeoutTarget(Enum<?> exitStateId) {
+        public Builder heartBeatTimeoutTarget(StateId exitStateId) {
             this.exitStateId = exitStateId;
             return this;
         }
