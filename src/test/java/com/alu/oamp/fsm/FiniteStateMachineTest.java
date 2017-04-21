@@ -26,7 +26,7 @@ public class FiniteStateMachineTest {
             .getLogger(FiniteStateMachineTest.class);
 
     private SimpleStateMachine fsm;
-    private BlockingQueue<LiftDoorState> queue =
+    private BlockingQueue<StateId> queue =
             new LinkedBlockingQueue<>();
     private Cell cell = new Cell();
     private Bell bell = new Bell();
@@ -53,13 +53,12 @@ public class FiniteStateMachineTest {
 
         // The door stays opened for 500 ms and closes itself.
         State state = States.newBuilder(LiftDoorState.OPENED)
-                .onEntry(() -> queue.offer(LiftDoorState.OPENED))
                 .timeout(500)
                 .timeoutTarget(LiftDoorState.CLOSED)
                 .build();
         states.add(state);
 
-        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(() -> queue.offer(LiftDoorState.CLOSED)).build();
+        state = States.newBuilder(LiftDoorState.CLOSED).build();
         State initial = state;
         states.add(state);
 
@@ -72,6 +71,7 @@ public class FiniteStateMachineTest {
         transitions.add(transition);
 
         fsm = new SimpleStateMachine(states, transitions, "Test", initial);
+        fsm.addStateMachineListener(new DoorStateListener(queue));
     }
 
     private void initFsmWithHeartBeat() {
@@ -80,10 +80,7 @@ public class FiniteStateMachineTest {
 
         State state =
                 States.newBuilder(LiftDoorState.OPENED)
-                        .onEntry(() -> {
-                            cell.setOn();
-                            queue.offer(LiftDoorState.OPENED);
-                        })
+                        .onEntry(() -> cell.setOn())
                         .heartBeatPeriod(50)
                         .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
                         .heartBeatWorker(() -> cell.isOff())
@@ -95,10 +92,7 @@ public class FiniteStateMachineTest {
         // Door is opened and ringing, when door closes stop the bell
         state =
                 States.newBuilder(LiftDoorState.OPENED_AND_RINGING)
-                        .onEntry(() -> {
-                            bell.ring();
-                            queue.offer(LiftDoorState.OPENED_AND_RINGING);
-                        })
+                        .onEntry(() -> bell.ring())
                         .heartBeatPeriod(50)
                         .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
                         .heartBeatWorker(() -> cell.isOff())
@@ -106,7 +100,7 @@ public class FiniteStateMachineTest {
                         .build();
         states.add(state);
 
-        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(() -> queue.offer(LiftDoorState.CLOSED)).build();
+        state = States.newBuilder(LiftDoorState.CLOSED).build();
         State initial = state;
         states.add(state);
 
@@ -118,6 +112,7 @@ public class FiniteStateMachineTest {
         transitions.add(transition);
 
         fsm = new SimpleStateMachine(states, transitions, "Test", initial);
+        fsm.addStateMachineListener(new DoorStateListener(queue));
     }
 
     private void initFsmForActiveState() {
@@ -125,22 +120,16 @@ public class FiniteStateMachineTest {
         Set<State> states = new HashSet<>();
 
         State state = States.newBuilder(LiftDoorState.OPENED)
-                .onEntry(() -> {
-                    cell.setOn();
-                    queue.offer(LiftDoorState.OPENED);
-                })
+                .onEntry(() -> cell.setOn())
                 .onExit(() -> LOGGER.info("Exiting Opened state..."))
                 .heartBeatPeriod(10)
                 .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
-                .heartBeatWorker(() -> {
-                    LOGGER.info("cell is: {}", cell);
-                    return cell.isOff();
-                })
+                .heartBeatWorker(() -> cell.isOff())
                 .timeout(1000)
                 .timeoutTarget(LiftDoorState.CLOSED).build();
         states.add(state);
 
-        state = States.newBuilder(LiftDoorState.CLOSED).onEntry(() -> queue.offer(LiftDoorState.CLOSED)).build();
+        state = States.newBuilder(LiftDoorState.CLOSED).build();
         State initial = state;
         states.add(state);
 
@@ -153,6 +142,7 @@ public class FiniteStateMachineTest {
 
 
         fsm = new SimpleStateMachine(states, transitions, "Test", initial);
+        fsm.addStateMachineListener(new DoorStateListener(queue));
     }
 
     @Test
@@ -255,5 +245,24 @@ public class FiniteStateMachineTest {
             return ringing;
         }
 
+    }
+
+    static class DoorStateListener implements StateMachineListener {
+
+        private final BlockingQueue<StateId> queue;
+
+        DoorStateListener(BlockingQueue<StateId> queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public void onStateEntered(StateId state) {
+            queue.offer(state);
+        }
+
+        @Override
+        public void onStateExited(StateId state) {
+
+        }
     }
 }

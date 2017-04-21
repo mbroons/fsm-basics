@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +90,7 @@ public class SimpleStateMachine implements TimeoutListener {
     private final EventProcessor eventProcessor;
     private State current;
     final String name;
+    private final CopyOnWriteArrayList<StateMachineListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * A finite state machine.
@@ -134,6 +136,10 @@ public class SimpleStateMachine implements TimeoutListener {
         eventProcessor = new EventProcessor("FSM " + name);
     }
 
+    public void addStateMachineListener(StateMachineListener listener) {
+        listeners.add(listener);
+    }
+
     @Override
     public void onTimeout() {
         fireEvent(InternalEvent.TIMEOUT);
@@ -154,6 +160,7 @@ public class SimpleStateMachine implements TimeoutListener {
             }
         }
         eventProcessor.shutdown();
+        listeners.clear();
     }
 
     /**
@@ -231,10 +238,16 @@ public class SimpleStateMachine implements TimeoutListener {
             if (newState != null) {
 
                 LOGGER.debug("Leaving state {}.", current);
+                for (StateMachineListener listener : listeners) {
+                    listener.onStateExited(current.getId());
+                }
                 current.onExit();
                 transition.run(event);
                 current = newState;
                 LOGGER.debug("Entering state {}.", current);
+                for (StateMachineListener listener : listeners) {
+                    listener.onStateEntered(current.getId());
+                }
                 current.onEntry();
             } else {
                 transition.run(event);
