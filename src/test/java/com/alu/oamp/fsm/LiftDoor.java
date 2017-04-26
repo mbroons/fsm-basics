@@ -15,7 +15,7 @@ import java.util.concurrent.BlockingQueue;
 public class LiftDoor {
 
     private SimpleStateMachine fsm;
-    private volatile boolean closeable = false;
+    private volatile boolean closeable = true;
     private Bell bell = new Bell();
 
     public void fireEvent(Cmd cmd) {
@@ -79,7 +79,6 @@ public class LiftDoor {
 
         State state =
                 States.newBuilder(LiftDoorState.OPENED)
-                        .onEntry(this::blockDoor)
                         .heartBeatPeriod(50)
                         .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
                         .heartBeatWorker(() -> closeable)
@@ -95,7 +94,7 @@ public class LiftDoor {
                         .heartBeatPeriod(50)
                         .heartBeatTimeoutTarget(LiftDoorState.CLOSED)
                         .heartBeatWorker(() -> closeable)
-                        .exitAction(() -> bell.stop())
+                        .onExit(() -> bell.stop())
                         .build();
         states.add(state);
 
@@ -127,7 +126,7 @@ public class LiftDoor {
         closeable = true;
     }
 
-    public void blockDoor() {
+    public void lockDoor() {
         closeable = false;
     }
 

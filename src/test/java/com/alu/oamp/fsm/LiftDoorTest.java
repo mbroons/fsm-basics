@@ -28,7 +28,7 @@ public class LiftDoorTest {
     }
 
     @Test
-    public void testFsmWithTimeout() throws InterruptedException {
+    public void testTimeout() throws InterruptedException {
 
         liftDoor = LiftDoor.newSimpleLiftDoor(new LiftDoor.DoorStateListener(queue));
         liftDoor.fireEvent(LiftDoor.Cmd.OPEN);
@@ -39,7 +39,7 @@ public class LiftDoorTest {
     }
 
     @Test
-    public void testFsmWithHeartBeat() throws InterruptedException {
+    public void testHeartBeat() throws InterruptedException {
 
         liftDoor = LiftDoor.newLiftDoorWithHeardBeat(new LiftDoor.DoorStateListener(queue));
 
@@ -49,7 +49,6 @@ public class LiftDoorTest {
                 LiftDoor.LiftDoorState.OPENED);
 
         // Close the door
-        liftDoor.releaseDoor();
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoor.LiftDoorState.CLOSED);
 
@@ -58,13 +57,15 @@ public class LiftDoorTest {
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoor.LiftDoorState.OPENED);
 
+        liftDoor.lockDoor();
+
         // Wait 1200, bell rings
         TimeUnit.MILLISECONDS.sleep(1200);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoor.LiftDoorState.OPENED_AND_RINGING);
         Assert.assertTrue(liftDoor.isRinging());
 
-        // Close the door
+        // Release the door, it will close
         liftDoor.releaseDoor();
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoor.LiftDoorState.CLOSED);
