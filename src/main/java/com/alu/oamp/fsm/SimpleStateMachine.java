@@ -133,7 +133,7 @@ public class SimpleStateMachine implements TimeoutListener {
                     .put(trans.getEventId(), trans);
         }
         this.current = initial;
-        eventProcessor = new EventProcessor("FSM " + name );
+        eventProcessor = new EventProcessor("FSM " + name);
     }
 
     public void addStateMachineListener(StateMachineListener listener) {
