@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * The State machine supports states with heart beat.
  * <p/>
  * <p>
- * A state with heartbeat is active as long as the heatbeat worker reports
+ * A state with heartbeat is active as long as the heartbeat worker reports
  * an ok status.
  * </p>
  * <p/>
@@ -133,7 +133,7 @@ public class SimpleStateMachine implements TimeoutListener {
                     .put(trans.getEventId(), trans);
         }
         this.current = initial;
-        eventProcessor = new EventProcessor("FSM " + name);
+        eventProcessor = new EventProcessor("FSM " + name );
     }
 
     public void addStateMachineListener(StateMachineListener listener) {
