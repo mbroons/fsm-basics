@@ -39,7 +39,7 @@ public class States {
         private Runnable onTimeout;
 
         private long period;
-        private BooleanSupplier heartBeatWorker;
+        private BooleanSupplier heartBeatError;
         private Runnable exitAction;
         private StateId exitStateId;
 
@@ -117,13 +117,13 @@ public class States {
         }
 
         /**
-         * Specifies the heart beat worker
+         * Specifies the heart beat condition
          *
-         * @param heartBeatWorker the heart beat worker.
+         * @param condition the heart beat condition.
          * @return the state builder
          */
-        public Builder heartBeatWorker(BooleanSupplier heartBeatWorker) {
-            this.heartBeatWorker = heartBeatWorker;
+        public Builder heartBeatError(BooleanSupplier condition) {
+            this.heartBeatError = condition;
             return this;
         }
 
@@ -162,8 +162,8 @@ public class States {
             if (period != 0) {
                 // This is a state with monitoring
                 checkNotNull(exitStateId, "Target state for monitored state can't be null");
-                checkNotNull(heartBeatWorker, "State with heart beat can't have null heart beat worker");
-                built = new StateWithHeartBeat(state, period, exitStateId, heartBeatWorker, exitAction);
+                checkNotNull(heartBeatError, "State with heart beat can't have null heart beat worker");
+                built = new StateWithHeartBeat(state, period, exitStateId, heartBeatError, exitAction);
             }
 			
 			if (timeout != 0) {

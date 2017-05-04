@@ -6,15 +6,15 @@ import java.util.Set;
 /**
  * A lift door with a heart beat state
  * <p>
- * States are [OPENED; CLOSE; OPENED_AND_RINGING]
- * and the following events for the door:
- * OPEN to open the door. CLOSE to close the door
- * PRESENCE to notify the door that someone/something blocks. (coming from a sensor somewhere)
+ * States are [OPENED; CLOSE; OPENED_AND_RINGING] WITH the following events:
+ * OPEN to open the door.
+ * CLOSE to close the door
+ * PRESENCE to notify the door that someone/something blocks the door. (coming from some kind of sensor)
  * ABSENCE to notify the door that nothing blocks the door
  * </p>
  *     <p>On OPEN the door moves to the OPENED state</p>
- *     <p>The OPENED state times out after 500 ms and the door returns to the CLOSED state if no presence is detected</p>
- *     <p>The OPENED state moves to OPENED_AND_RINGING is someone/something is blocking the door for more than 1000 ms/p>
+ *     <p>The door closes itself after 500 ms if no presence is detected</p>
+ *     <p>The door rings if it stays opened for more than 1000 ms/p>
  * Several scenario are tested.
  */
 public class LiftDoorWithHeartBeat {
@@ -53,9 +53,9 @@ public class LiftDoorWithHeartBeat {
 
         com.alu.oamp.fsm.State state =
                 States.newBuilder(State.OPENED)
-                        .heartBeatPeriod(50)
+                        .heartBeatPeriod(500)
                         .heartBeatTimeoutTarget(State.CLOSED)
-                        .heartBeatWorker(() -> closeable)
+                        .heartBeatError(() -> closeable)
                         .timeout(1000)
                         .timeoutTarget(State.OPENED_AND_RINGING)
                         .build();
@@ -67,7 +67,7 @@ public class LiftDoorWithHeartBeat {
                         .onEntry(() -> ringing = true)
                         .heartBeatPeriod(50)
                         .heartBeatTimeoutTarget(State.CLOSED)
-                        .heartBeatWorker(() -> closeable)
+                        .heartBeatError(() -> closeable)
                         .onExit(() -> ringing = false)
                         .build();
         states.add(state);
@@ -78,9 +78,10 @@ public class LiftDoorWithHeartBeat {
 
         // Transition to open the door
         Set<Transition> transitions = new HashSet<>();
-        Transition transition =
-                Transition.newBuilder(states).from(State.CLOSED)
-                        .event(Cmd.OPEN).to(State.OPENED).build();
+        Transition transition = Transition.newBuilder(states)
+                        .from(State.CLOSED)
+                        .event(Cmd.OPEN)
+                        .to(State.OPENED).build();
         transitions.add(transition);
 
         // Transition for presence detection on opened state
@@ -91,6 +92,7 @@ public class LiftDoorWithHeartBeat {
                         .action(() -> closeable = false).build();
         transitions.add(transition);
 
+        // Transition for absence detection on opened state
         transition =
                 Transition.newBuilder(states)
                         .from(State.OPENED)
@@ -98,6 +100,7 @@ public class LiftDoorWithHeartBeat {
                         .action(() -> closeable = true).build();
         transitions.add(transition);
 
+        // Transition to close the door if door is closeable
         transition =
                 Transition.newBuilder(states)
                         .from(State.OPENED)
@@ -109,8 +112,10 @@ public class LiftDoorWithHeartBeat {
 
         // Transition for presence detection on opened and ringing state state
         transition =
-                Transition.newBuilder(states).from(State.OPENED_AND_RINGING)
-                        .event(Cmd.ABSENCE).action(() -> closeable = true).build();
+                Transition.newBuilder(states)
+                        .from(State.OPENED_AND_RINGING)
+                        .event(Cmd.ABSENCE)
+                        .action(() -> closeable = true).build();
         transitions.add(transition);
 
         fsm = new SimpleStateMachine(states, transitions, "Heart Beat Door", initial);

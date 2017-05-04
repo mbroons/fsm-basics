@@ -9,7 +9,7 @@ import java.util.function.BooleanSupplier;
  * A state with heart beat.
  * <p/>
  * <p>
- * The state remains active as long as the heart beat worker returns true.
+ * The state remains active as long as the heart beat condition returns false.
  * </p>
  * <p>
  * When heart beat fails, the state is exited and the state identified by the target state id is entered
@@ -19,7 +19,7 @@ public class StateWithHeartBeat extends AbstractActiveState {
 
 	private final long period;
 	private final StateId targetStateId;
-	private final BooleanSupplier heartBeatWorker;
+	private final BooleanSupplier heartBeatError;
 	private final Runnable exitAction;
 
 	/**
@@ -29,18 +29,18 @@ public class StateWithHeartBeat extends AbstractActiveState {
 	 *            the inner state.
 	 * @param period
 	 *            the heart beat polling period
-	 * @param heartBeatWorker
-	 *            the heart beat worker.
+	 * @param heartBeatError
+	 *            the heart beat error.
 	 * @param exitAction
 	 *            the action to perform on exit
 	 * @param targetStateId
 	 *            the target state on heart beat error..
 	 */
 	StateWithHeartBeat(State innerState, long period, StateId targetStateId,
-					   BooleanSupplier heartBeatWorker, Runnable exitAction) {
+					   BooleanSupplier heartBeatError, Runnable exitAction) {
         super(innerState);
         this.period = period;
-        this.heartBeatWorker = heartBeatWorker;
+        this.heartBeatError = heartBeatError;
         this.exitAction = exitAction;
         this.targetStateId = targetStateId;
         provider = () -> new Timer("Monitor " + state.toString());
@@ -53,7 +53,7 @@ public class StateWithHeartBeat extends AbstractActiveState {
 		timer = provider.get();
 		TimerTask runHeartBeat = new TimerTask() {
 			public void run() {
-				if (heartBeatWorker.getAsBoolean()) {
+				if (heartBeatError.getAsBoolean()) {
 					listener.onHeartBeatError();
 					timer.cancel();
 				}
