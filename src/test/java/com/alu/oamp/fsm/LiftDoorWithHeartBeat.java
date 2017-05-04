@@ -8,7 +8,7 @@ import java.util.Set;
  * <p>
  * States are [OPENED; CLOSE; OPENED_AND_RINGING]
  * and the following events for the door:
- * OPEN to open the door.
+ * OPEN to open the door. CLOSE to close the door
  * PRESENCE to notify the door that someone/something blocks. (coming from a sensor somewhere)
  * ABSENCE to notify the door that nothing blocks the door
  * </p>
@@ -29,6 +29,7 @@ public class LiftDoorWithHeartBeat {
 
     enum Cmd implements EventId {
         OPEN,
+        CLOSE,
         PRESENCE,
         ABSENCE
     }
@@ -84,12 +85,26 @@ public class LiftDoorWithHeartBeat {
 
         // Transition for presence detection on opened state
         transition =
-                Transition.newBuilder(states).from(State.OPENED)
-                        .event(Cmd.PRESENCE).action(() -> closeable = false).build();
+                Transition.newBuilder(states)
+                        .from(State.OPENED)
+                        .event(Cmd.PRESENCE)
+                        .action(() -> closeable = false).build();
         transitions.add(transition);
+
         transition =
-                Transition.newBuilder(states).from(State.OPENED)
-                        .event(Cmd.ABSENCE).action(() -> closeable = true).build();
+                Transition.newBuilder(states)
+                        .from(State.OPENED)
+                        .event(Cmd.ABSENCE)
+                        .action(() -> closeable = true).build();
+        transitions.add(transition);
+
+        transition =
+                Transition.newBuilder(states)
+                        .from(State.OPENED)
+                        .event(Cmd.CLOSE)
+                        .when(() -> closeable)
+                        .to(State.CLOSED)
+                        .build();
         transitions.add(transition);
 
         // Transition for presence detection on opened and ringing state state

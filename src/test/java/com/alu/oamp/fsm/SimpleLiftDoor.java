@@ -18,7 +18,8 @@ public class SimpleLiftDoor {
     private SimpleStateMachine fsm;
 
     enum Cmd implements EventId {
-        OPEN
+        OPEN,
+        CLOSE
     }
 
     enum State implements StateId {
@@ -58,6 +59,11 @@ public class SimpleLiftDoor {
         Transition transition =
                 Transition.newBuilder(states).from(State.CLOSED)
                         .event(Cmd.OPEN).to(State.OPENED).build();
+
+        transitions.add(transition);
+        transition =
+                Transition.newBuilder(states).from(State.OPENED)
+                        .event(Cmd.CLOSE).to(State.CLOSED).build();
         transitions.add(transition);
 
         fsm = new SimpleStateMachine(states, transitions, "Simple Lift Door", initial);

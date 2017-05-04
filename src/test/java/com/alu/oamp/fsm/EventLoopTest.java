@@ -11,7 +11,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class EventLoopTest {
 	
 	@Test
-	public void testStartStop() {
+	public void test_event_loop_life_cycle() {
 		
 		StringEventLoop worker = new StringEventLoop();
 		worker.shutdown();
@@ -19,7 +19,7 @@ public class EventLoopTest {
 	}
 	
 	@Test
-	public void testSendMessage() {
+	public void test_send_message() {
 		
 		StringEventLoop worker = new StringEventLoop();
 		worker.send("Msg #1");
@@ -28,7 +28,7 @@ public class EventLoopTest {
 	}
 	
 	@Test
-	public void testTasksInException() {
+	public void test_event_loop_worker_is_broken() {
 		
 		BrokenEventLoop bel = new BrokenEventLoop();
 		bel.send("Msg #1");
@@ -38,17 +38,7 @@ public class EventLoopTest {
 	}
 	
 	@Test
-	public void testSleepingTasks() {
-		
-		SleepingEventLoop sel = new SleepingEventLoop(10);
-		sel.send("Msg #1");
-		sel.send("Msg #2");
-		sel.shutdown();
-		Assert.assertTrue(sel.isShutdown());
-	}
-	
-	@Test
-	public void testRejectedExecution() {
+	public void test_message_is_rejected_when_queue_is_full() {
 		
 		SleepingEventLoop sel = new SleepingEventLoop(2);
 		sel.send("Msg #1");
@@ -60,13 +50,13 @@ public class EventLoopTest {
 	}
 	
 	@Test(expectedExceptions=IllegalArgumentException.class)
-	public void testInvalidCapacity() {
+	public void test_exception_is_raised_on_invalid_capacity() {
 		
 		new SleepingEventLoop(0);
 	}
 	
 	@Test(expectedExceptions=IllegalStateException.class)
-	public void testProcessAfterShutdown() {
+	public void test_exception_is_raised_when_sending_message_after_shutdown() {
 		
 		StringEventLoop worker = new StringEventLoop();
 		worker.shutdown();
