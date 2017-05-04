@@ -133,7 +133,7 @@ public class SimpleStateMachine implements TimeoutListener {
                     .put(trans.getEventId(), trans);
         }
         this.current = initial;
-        eventProcessor = new EventProcessor("FSM " + name );
+        eventProcessor = new EventProcessor("FSM " + name);
     }
 
     public void addStateMachineListener(StateMachineListener listener) {
@@ -222,7 +222,9 @@ public class SimpleStateMachine implements TimeoutListener {
                     transitionMap.get(current.getId()).get(event.getId());
             if (transition != null) {
 
-                executeTransition(event, transition);
+                if (!transition.getCondition().isPresent() || transition.getCondition().get().getAsBoolean()) {
+                    executeTransition(event, transition);
+                }
             } else {
                 LOGGER.info("Event {} is ignored for state {}", event, current);
             }

@@ -2,7 +2,9 @@ package com.alu.oamp.fsm;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +22,9 @@ public class Transition {
 	private final EventId eventId;
 	private final State fromState;
 	private final Object action;
+    private final Optional<BooleanSupplier> condition;
 
-	/**
+    /**
 	 * Creates a new transition.
 	 *
 	 * @param fromState
@@ -32,13 +35,16 @@ public class Transition {
 	 *            the transition target state
 	 * @param action
 	 *            the action to execute
+	 * @param condition
+	 *            the transition condition
 	 */
 	private Transition(State fromState, EventId eventId, State toState,
-			Object action) {
+                       Object action, Optional<BooleanSupplier> condition) {
 		this.fromState = fromState;
 		this.eventId = eventId;
 		this.toState = toState;
-		this.action = action;
+        this.action = action;
+        this.condition = condition;
 	}
 
 	/**
@@ -68,7 +74,18 @@ public class Transition {
 		return fromState;
 	}
 
-	@Override
+    /**
+     * Returns the transition condition.
+     *
+     * @return the transition condition
+     */
+    Optional<BooleanSupplier> getCondition() {
+        return condition;
+    }
+
+
+
+    @Override
 	public String toString() {
 		return "Transition [" + eventId + ", " + fromState + "]";
 	}
@@ -128,8 +145,9 @@ public class Transition {
 		private EventId eventId;
 		private State fromState;
 		private Object action;
+        private BooleanSupplier condition;
 
-		private Builder(Map<StateId, State> map) {
+        private Builder(Map<StateId, State> map) {
 			this.map = map;
 		}
 
@@ -220,6 +238,18 @@ public class Transition {
 			return this;
 		}
 
+        /**
+         * Specifies the transition condition.
+         *
+         * @param condition
+         *            the transition condition
+         * @return the builder
+         */
+        public Builder when(BooleanSupplier condition) {
+            this.condition = condition;
+            return this;
+        }
+
 		/**
 		 * Specifies the transition action.
 		 *
@@ -243,7 +273,7 @@ public class Transition {
 		public Transition build() {
 			checkNotNull(fromState, "fromState can't be null.");
 			checkNotNull(eventId, "eventId can't be null.");
-			return new Transition(fromState, eventId, toState, action);
+			return new Transition(fromState, eventId, toState, action, Optional.ofNullable(condition));
 		}
 
 		private static void checkNotNull(Object object, String message) {
