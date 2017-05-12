@@ -3,6 +3,8 @@ package com.alu.oamp.fsm;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.alu.oamp.fsm.States.state;
+
 /**
  * A lift door with a heart beat state
  * <p>
@@ -52,7 +54,7 @@ public class LiftDoorWithHeartBeat {
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
         com.alu.oamp.fsm.State state =
-                States.newBuilder(State.OPENED)
+                state(State.OPENED)
                         .heartBeatPeriod(500)
                         .heartBeatTimeoutTarget(State.CLOSED)
                         .heartBeatError(() -> closeable)
@@ -62,8 +64,7 @@ public class LiftDoorWithHeartBeat {
         states.add(state);
 
         // Door is opened and ringing, when door closes stop the bell
-        state =
-                States.newBuilder(State.OPENED_AND_RINGING)
+        state = state(State.OPENED_AND_RINGING)
                         .onEntry(() -> ringing = true)
                         .heartBeatPeriod(50)
                         .heartBeatTimeoutTarget(State.CLOSED)
@@ -72,7 +73,16 @@ public class LiftDoorWithHeartBeat {
                         .build();
         states.add(state);
 
-        state = States.newBuilder(State.CLOSED).build();
+        state = state(State.OPENED_AND_RINGING)
+                .onEntry(() -> ringing = true)
+                .heartBeatPeriod(50)
+                .heartBeatTimeoutTarget(State.CLOSED)
+                .heartBeatError(() -> closeable)
+                .onExit(() -> ringing = false)
+                .build();
+        states.add(state);
+
+        state = state(State.CLOSED).build();
         com.alu.oamp.fsm.State initial = state;
         states.add(state);
 

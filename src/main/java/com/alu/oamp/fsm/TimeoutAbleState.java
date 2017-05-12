@@ -5,9 +5,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * A state with timeout.
+ * A timeout able state times out if the state is active for more than the timeout duration
  */
-public class StateWithTimeout extends AbstractActiveState {
+public class TimeoutAbleState extends AbstractTimedState {
 
     private final long timeout;
     private final Runnable timeoutAction;
@@ -21,7 +21,7 @@ public class StateWithTimeout extends AbstractActiveState {
      * @param timeoutAction  the transient state timeout action
      * @param timeoutStateId the target state on timeout
      */
-    StateWithTimeout(State innerState, long timeout, Runnable timeoutAction,
+    TimeoutAbleState(State innerState, long timeout, Runnable timeoutAction,
                      StateId timeoutStateId) {
         super(innerState);
         this.timeout = timeout;

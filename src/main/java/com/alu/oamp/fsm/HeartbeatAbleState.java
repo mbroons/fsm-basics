@@ -6,16 +6,16 @@ import java.util.TimerTask;
 import java.util.function.BooleanSupplier;
 
 /**
- * A state with heart beat.
- * <p/>
  * <p>
- * The state remains active as long as the heart beat condition returns false.
+ * An heartbeat able state implements an heart beat mechanism to check whether the state should remain active or not.
  * </p>
  * <p>
- * When heart beat fails, the state is exited and the state identified by the target state id is entered
+ * The client application provides an heart beat error function that will be regularly evaluated. As soon as the
+ * heart beat function reports an error, the state is exited and the state identified by the target state id
+ * is entered.
  * </p>
  */
-public class StateWithHeartBeat extends AbstractActiveState {
+public class HeartbeatAbleState extends AbstractTimedState {
 
 	private final long period;
 	private final StateId targetStateId;
@@ -36,7 +36,7 @@ public class StateWithHeartBeat extends AbstractActiveState {
 	 * @param targetStateId
 	 *            the target state on heart beat error..
 	 */
-	StateWithHeartBeat(State innerState, long period, StateId targetStateId,
+	HeartbeatAbleState(State innerState, long period, StateId targetStateId,
 					   BooleanSupplier heartBeatError, Runnable exitAction) {
         super(innerState);
         this.period = period;
@@ -67,7 +67,7 @@ public class StateWithHeartBeat extends AbstractActiveState {
 
 		Set<Transition> transitions = getInnerStateTransitions(states);
 
-		// add exit monitoring transition
+		// add heart beat exit condition
 		transitions.add(Transition.newBuilder(states).from(getId())
 			.event(SimpleStateMachine.InternalEvent.HEARTBEAT_ERROR)
 			.to(targetStateId).action(exitAction).build());

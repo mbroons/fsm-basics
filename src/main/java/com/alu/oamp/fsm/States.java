@@ -17,7 +17,7 @@ public class States {
 	 * @param stateId the state id
 	 * @return a new state builder.
 	 */
-	public static Builder newBuilder(StateId stateId) {
+	public static Builder state(StateId stateId) {
 		return new Builder(stateId);
 	}
 	
@@ -163,13 +163,13 @@ public class States {
                 // This is a state with monitoring
                 checkNotNull(exitStateId, "Target state for monitored state can't be null");
                 checkNotNull(heartBeatError, "State with heart beat can't have null heart beat worker");
-                built = new StateWithHeartBeat(state, period, exitStateId, heartBeatError, exitAction);
+                built = new HeartbeatAbleState(state, period, exitStateId, heartBeatError, exitAction);
             }
 			
 			if (timeout != 0) {
 				// This is a state with timeout
 				checkNotNull(timeoutStateId, "Target state on timeout can't be null");
-                built = new StateWithTimeout(built, timeout, onTimeout, timeoutStateId);
+                built = new TimeoutAbleState(built, timeout, onTimeout, timeoutStateId);
 			}
 			return built;
 		}
@@ -180,5 +180,7 @@ public class States {
 			}
 		}
 	}
+
+
 
 }

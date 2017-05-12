@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
  * the heartbeat worker and the target state to enter on heartbeat error.
  * </p>
  */
-public class SimpleStateMachine implements TimeoutListener {
+public class SimpleStateMachine implements TimedStateListener {
 
     /**
      * State machine internal events
@@ -114,10 +114,10 @@ public class SimpleStateMachine implements TimeoutListener {
             transitionMap.put(state.getId(),
                     new HashMap<>());
 
-            if (state instanceof ActiveState) {
-                ((ActiveState) state).setActiveStateListener(this);
+            if (state instanceof TimedState) {
+                ((TimedState) state).setActiveStateListener(this);
                 internalTransitions
-                        .addAll(((ActiveState) state).getInternal(states));
+                        .addAll(((TimedState) state).getInternal(states));
             }
         }
 
@@ -154,11 +154,9 @@ public class SimpleStateMachine implements TimeoutListener {
      * shutdown the state machine
      */
     public void shutdown() {
-        for (State state : states.values()) {
-            if (state instanceof ActiveState) {
-                ((ActiveState) state).shutdown();
-            }
-        }
+        states.values().stream().filter(state -> state instanceof TimedState).forEach(state -> {
+            ((TimedState) state).shutdown();
+        });
         eventProcessor.shutdown();
         listeners.clear();
     }

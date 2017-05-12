@@ -3,6 +3,8 @@ package com.alu.oamp.fsm;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.alu.oamp.fsm.States.state;
+
 /**
  * This is a simple state machine simulating a lift door.
  * <p>
@@ -43,13 +45,13 @@ public class SimpleLiftDoor {
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
         // The door stays opened for 500 ms and closes itself.
-        com.alu.oamp.fsm.State state = States.newBuilder(State.OPENED)
+        com.alu.oamp.fsm.State state = state(State.OPENED)
                 .timeout(500)
                 .timeoutTarget(State.CLOSED)
                 .build();
         states.add(state);
 
-        state = States.newBuilder(State.CLOSED).build();
+        state = state(State.CLOSED).build();
         com.alu.oamp.fsm.State initial = state;
         states.add(state);
 

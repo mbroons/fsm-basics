@@ -3,20 +3,20 @@ package com.alu.oamp.fsm;
 import java.util.Set;
 
 /**
- * An active state.
+ * A timed state.
  *
  * <p>
- * Active states are state with timeout and/or state with monitoring
+ * timed states can exit after a specified duration.
  * </p>
  * <p>
- * They need to be shutdown (they hold a timer)
+ * Timed state must be shutdown before exiting (to shutdown the timer)
  * </p>
  * <p>
- * They have internal transitions
+ * The creation of a timed state results in the creation of internal transition within the state machine.
  * </p>
  *
  */
-public interface ActiveState extends State {
+public interface TimedState extends State {
 
 	/**
 	 * Set active state listener
@@ -24,7 +24,7 @@ public interface ActiveState extends State {
 	 * @param listener
 	 *            the active state listener
 	 */
-	void setActiveStateListener(TimeoutListener listener);
+	void setActiveStateListener(TimedStateListener listener);
 
 	/**
 	 * Returns the state internal transitions.

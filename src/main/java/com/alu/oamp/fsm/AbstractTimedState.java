@@ -7,11 +7,11 @@ import java.util.Timer;
 /**
  * A abstract active state.
  */
-public abstract class AbstractActiveState implements ActiveState {
+public abstract class AbstractTimedState implements TimedState {
 
     protected final State state;
     protected TimerProvider provider;
-    protected TimeoutListener listener;
+    protected TimedStateListener listener;
     protected Timer timer;
 
     /**
@@ -19,7 +19,7 @@ public abstract class AbstractActiveState implements ActiveState {
      *
      * @param innerState the inner state.
      */
-    AbstractActiveState(State innerState) {
+    AbstractTimedState(State innerState) {
         this.state = innerState;
     }
 
@@ -41,16 +41,16 @@ public abstract class AbstractActiveState implements ActiveState {
 
         // Get inner state transitions
         Set<Transition> transitions = new HashSet<>();
-        if (state instanceof ActiveState) {
-            transitions = ((ActiveState) state).getInternal(states);
+        if (state instanceof TimedState) {
+            transitions = ((TimedState) state).getInternal(states);
         }
         return transitions;
     }
 
     @Override
     public void shutdown() {
-        if (state instanceof ActiveState) {
-            ((ActiveState) state).shutdown();
+        if (state instanceof TimedState) {
+            ((TimedState) state).shutdown();
         }
         if (timer != null) {
             timer.cancel();
@@ -58,9 +58,9 @@ public abstract class AbstractActiveState implements ActiveState {
     }
 
     @Override
-    public void setActiveStateListener(TimeoutListener listener) {
-        if (state instanceof ActiveState) {
-            ((ActiveState) state).setActiveStateListener(listener);
+    public void setActiveStateListener(TimedStateListener listener) {
+        if (state instanceof TimedState) {
+            ((TimedState) state).setActiveStateListener(listener);
         }
         this.listener = listener;
     }
@@ -68,8 +68,8 @@ public abstract class AbstractActiveState implements ActiveState {
     @Override
     public void setProvider(TimerProvider provider) {
         this.provider = provider;
-        if (state instanceof ActiveState) {
-            ((ActiveState) state).setProvider(provider);
+        if (state instanceof TimedState) {
+            ((TimedState) state).setProvider(provider);
         }
     }
 
