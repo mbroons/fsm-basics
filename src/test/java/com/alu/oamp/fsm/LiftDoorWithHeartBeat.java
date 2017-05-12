@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.alu.oamp.fsm.States.state;
+import static com.alu.oamp.fsm.Timeout.withTimeout;
 
 /**
  * A lift door with a heart beat state
@@ -58,8 +59,7 @@ public class LiftDoorWithHeartBeat {
                         .heartBeatPeriod(500)
                         .heartBeatTimeoutTarget(State.CLOSED)
                         .heartBeatError(() -> closeable)
-                        .timeout(1000)
-                        .timeoutTarget(State.OPENED_AND_RINGING)
+                        .timeout(withTimeout().timeout(1000).target(State.OPENED_AND_RINGING).build())
                         .build();
         states.add(state);
 

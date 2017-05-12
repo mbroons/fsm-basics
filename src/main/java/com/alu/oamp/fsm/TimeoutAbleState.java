@@ -9,24 +9,17 @@ import java.util.TimerTask;
  */
 public class TimeoutAbleState extends AbstractTimedState {
 
-    private final long timeout;
-    private final Runnable timeoutAction;
-    private final StateId timeoutStateId;
+    private final Timeout timeout;
 
     /**
      * Creates a new state with timeout.
      *
      * @param innerState     the inner state.
-     * @param timeout        the transient state timeout
-     * @param timeoutAction  the transient state timeout action
-     * @param timeoutStateId the target state on timeout
+     * @param timeout        the timeout specification
      */
-    TimeoutAbleState(State innerState, long timeout, Runnable timeoutAction,
-                     StateId timeoutStateId) {
+    TimeoutAbleState(State innerState, Timeout timeout) {
         super(innerState);
         this.timeout = timeout;
-        this.timeoutAction = timeoutAction;
-        this.timeoutStateId = timeoutStateId;
         provider = () -> new Timer("Timer " + state.toString());
     }
 
@@ -41,7 +34,7 @@ public class TimeoutAbleState extends AbstractTimedState {
                 listener.onTimeout();
             }
         };
-        timer.schedule(task, timeout);
+        timer.schedule(task, timeout.getTimeout());
     }
 
 
@@ -53,8 +46,8 @@ public class TimeoutAbleState extends AbstractTimedState {
         // add exit monitoring transition
         transitions.add(Transition.newBuilder(states).from(getId())
                 .event(SimpleStateMachine.InternalEvent.TIMEOUT)
-                .to(timeoutStateId)
-                .action(timeoutAction).build());
+                .to(timeout.getTargetStateId())
+                .action(timeout.getAction()).build());
         return transitions;
     }
 }

@@ -1,5 +1,6 @@
 package com.alu.oamp.fsm;
 
+import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -34,9 +35,7 @@ public class States {
 		private Runnable onEntry;
 		private Runnable onExit;
 
-        private long timeout;
-        private StateId timeoutStateId;
-        private Runnable onTimeout;
+        private Optional<Timeout> timeout = Optional.empty();
 
         private long period;
         private BooleanSupplier heartBeatError;
@@ -73,35 +72,13 @@ public class States {
 		}
 		
 		/**
-		 * Specifies the state timeout value for a state with timeout.
+		 * Specifies the state timeout.
 		 * 
-		 * @param timeout the timeout value
+		 * @param timeout the timeout
 		 * @return the state builder
 		 */
-		public Builder timeout(long timeout) {
-			this.timeout = timeout;
-			return this;
-		}
-		
-		/**
-		 * Specifies the action to invoke when a state times out.
-		 * 
-		 * @param onTimeout the timeout action
-		 * @return the state builder
-		 */
-		public Builder onTimeout(Runnable onTimeout) {
-			this.onTimeout = onTimeout;
-			return this;
-		}
-		
-		/**
-		 * Specifies the target state when a state times out.
-		 * 
-		 * @param targetStateId the target state on timeout
-		 * @return the state builder
-		 */
-		public Builder timeoutTarget(StateId targetStateId) {
-			this.timeoutStateId = targetStateId;
+		public Builder timeout(Timeout timeout) {
+			this.timeout = Optional.ofNullable(timeout);
 			return this;
 		}
 
@@ -165,11 +142,9 @@ public class States {
                 checkNotNull(heartBeatError, "State with heart beat can't have null heart beat worker");
                 built = new HeartbeatAbleState(state, period, exitStateId, heartBeatError, exitAction);
             }
-			
-			if (timeout != 0) {
-				// This is a state with timeout
-				checkNotNull(timeoutStateId, "Target state on timeout can't be null");
-                built = new TimeoutAbleState(built, timeout, onTimeout, timeoutStateId);
+
+			if (timeout.isPresent()) {
+                built = new TimeoutAbleState(built, timeout.get());
 			}
 			return built;
 		}
