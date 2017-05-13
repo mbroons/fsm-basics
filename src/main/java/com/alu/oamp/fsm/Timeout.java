@@ -28,7 +28,7 @@ public class Timeout {
         return targetStateId;
     }
 
-    public static Builder withTimeout() {
+    public static Builder buildWith() {
         return new Builder();
     }
 

@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.Timeout.withTimeout;
+import static com.alu.oamp.fsm.Timeout.buildWith;
 
 /**
  * A lift door with a heart beat state
@@ -15,9 +15,9 @@ import static com.alu.oamp.fsm.Timeout.withTimeout;
  * PRESENCE to notify the door that someone/something blocks the door. (coming from some kind of sensor)
  * ABSENCE to notify the door that nothing blocks the door
  * </p>
- *     <p>On OPEN the door moves to the OPENED state</p>
- *     <p>The door closes itself after 500 ms if no presence is detected</p>
- *     <p>The door rings if it stays opened for more than 1000 ms/p>
+ * <p>On OPEN the door moves to the OPENED state</p>
+ * <p>The door closes itself after 500 ms if no presence is detected</p>
+ * <p>The door rings if it stays opened for more than 1000 ms/p>
  * Several scenario are tested.
  */
 public class LiftDoorWithHeartBeat {
@@ -56,29 +56,37 @@ public class LiftDoorWithHeartBeat {
 
         com.alu.oamp.fsm.State state =
                 state(State.OPENED)
-                        .heartBeatPeriod(500)
-                        .heartBeatTimeoutTarget(State.CLOSED)
-                        .heartBeatError(() -> closeable)
-                        .timeout(withTimeout().timeout(1000).target(State.OPENED_AND_RINGING).build())
+                        .heartbeat(Heartbeat.buildWith()
+                                .period(500).error(() -> closeable)
+                                .targetStateId(State.CLOSED)
+                                .build())
+                        .timeout(buildWith()
+                                .timeout(1000)
+                                .target(State.OPENED_AND_RINGING)
+                                .build())
                         .build();
         states.add(state);
 
         // Door is opened and ringing, when door closes stop the bell
         state = state(State.OPENED_AND_RINGING)
-                        .onEntry(() -> ringing = true)
-                        .heartBeatPeriod(50)
-                        .heartBeatTimeoutTarget(State.CLOSED)
-                        .heartBeatError(() -> closeable)
-                        .onExit(() -> ringing = false)
-                        .build();
+                .onEntry(() -> ringing = true)
+                .heartbeat(Heartbeat.buildWith()
+                        .period(50)
+                        .error(() -> closeable)
+                        .targetStateId(State.CLOSED)
+                        .exitAction(() -> ringing = false)
+                        .build())
+                .build();
         states.add(state);
 
         state = state(State.OPENED_AND_RINGING)
                 .onEntry(() -> ringing = true)
-                .heartBeatPeriod(50)
-                .heartBeatTimeoutTarget(State.CLOSED)
-                .heartBeatError(() -> closeable)
-                .onExit(() -> ringing = false)
+                .heartbeat(Heartbeat.buildWith()
+                        .period(50)
+                        .error(() -> closeable)
+                        .targetStateId(State.CLOSED)
+                        .exitAction(() -> ringing = false)
+                        .build())
                 .build();
         states.add(state);
 
@@ -89,9 +97,9 @@ public class LiftDoorWithHeartBeat {
         // Transition to open the door
         Set<Transition> transitions = new HashSet<>();
         Transition transition = Transition.newBuilder(states)
-                        .from(State.CLOSED)
-                        .event(Cmd.OPEN)
-                        .to(State.OPENED).build();
+                .from(State.CLOSED)
+                .event(Cmd.OPEN)
+                .to(State.OPENED).build();
         transitions.add(transition);
 
         // Transition for presence detection on opened state

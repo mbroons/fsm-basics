@@ -1,7 +1,6 @@
 package com.alu.oamp.fsm;
 
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 
 /**
  * Utility class to create states.
@@ -36,11 +35,7 @@ public class States {
 		private Runnable onExit;
 
         private Optional<Timeout> timeout = Optional.empty();
-
-        private long period;
-        private BooleanSupplier heartBeatError;
-        private Runnable exitAction;
-        private StateId exitStateId;
+		private Optional<Heartbeat> heartbeat = Optional.empty();
 
 		/**
 		 * Creates a new state builder.
@@ -83,64 +78,25 @@ public class States {
 		}
 
         /**
-         * Specifies the monitoring period for a state with monitoring.
+         * Specifies the state timeout.
          *
-         * @param period the monitoring period
+         * @param heartbeat the heartbeat
          * @return the state builder
          */
-        public Builder heartBeatPeriod(long period) {
-            this.period = period;
+        public Builder heartbeat(Heartbeat heartbeat) {
+            this.heartbeat = Optional.ofNullable(heartbeat);
             return this;
         }
-
-        /**
-         * Specifies the heart beat condition
-         *
-         * @param condition the heart beat condition.
-         * @return the state builder
-         */
-        public Builder heartBeatError(BooleanSupplier condition) {
-            this.heartBeatError = condition;
-            return this;
-        }
-
-        /**
-         * Specifies the action to invoke when state is exited due
-         * to monitoring
-         *
-         * @param action the exit monitoring action
-         * @return the state builder
-         */
-        public Builder exitAction(Runnable action) {
-            this.exitAction = action;
-            return this;
-        }
-
-        /**
-         * Specifies the target state when the state has exited due to time out on heart beat.
-         *
-         * @param exitStateId the target state
-         * @return the state builder
-         */
-        public Builder heartBeatTimeoutTarget(StateId exitStateId) {
-            this.exitStateId = exitStateId;
-            return this;
-        }
-		
 
 		/**
 		 * Builds the state.
 		 * @return the new state.
 		 */
 		public State build() {
-            BaseState state = new BaseState(stateId, onEntry, onExit);
-            State built = state;
+            State built = new BaseState(stateId, onEntry, onExit);
 
-            if (period != 0) {
-                // This is a state with monitoring
-                checkNotNull(exitStateId, "Target state for monitored state can't be null");
-                checkNotNull(heartBeatError, "State with heart beat can't have null heart beat worker");
-                built = new HeartbeatAbleState(state, period, exitStateId, heartBeatError, exitAction);
+            if (heartbeat.isPresent()) {
+                built = new HeartbeatAbleState(built, heartbeat.get());
             }
 
 			if (timeout.isPresent()) {
@@ -155,7 +111,4 @@ public class States {
 			}
 		}
 	}
-
-
-
 }

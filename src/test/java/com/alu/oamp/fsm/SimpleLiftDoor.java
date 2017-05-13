@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.Timeout.withTimeout;
+import static com.alu.oamp.fsm.Timeout.buildWith;
 
 /**
  * This is a simple state machine simulating a lift door.
@@ -47,7 +47,7 @@ public class SimpleLiftDoor {
 
         // The door stays opened for 500 ms and closes itself.
         com.alu.oamp.fsm.State state = state(State.OPENED)
-                .timeout(withTimeout().timeout(1000).target(State.CLOSED).build())
+                .timeout(buildWith().timeout(1000).target(State.CLOSED).build())
                 .build();
         states.add(state);
 

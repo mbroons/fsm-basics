@@ -3,7 +3,6 @@ package com.alu.oamp.fsm;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.BooleanSupplier;
 
 /**
  * <p>
@@ -17,32 +16,20 @@ import java.util.function.BooleanSupplier;
  */
 public class HeartbeatAbleState extends AbstractTimedState {
 
-	private final long period;
-	private final StateId targetStateId;
-	private final BooleanSupplier heartBeatError;
-	private final Runnable exitAction;
+
+	private final Heartbeat heartbeat;
 
 	/**
 	 * Creates a new state with heart beat.
 	 *
 	 * @param innerState
 	 *            the inner state.
-	 * @param period
-	 *            the heart beat polling period
-	 * @param heartBeatError
-	 *            the heart beat error.
-	 * @param exitAction
-	 *            the action to perform on exit
-	 * @param targetStateId
-	 *            the target state on heart beat error..
+	 * @param heartbeat
+	 *            the heart beat specification
 	 */
-	HeartbeatAbleState(State innerState, long period, StateId targetStateId,
-					   BooleanSupplier heartBeatError, Runnable exitAction) {
+	HeartbeatAbleState(State innerState, Heartbeat heartbeat) {
         super(innerState);
-        this.period = period;
-        this.heartBeatError = heartBeatError;
-        this.exitAction = exitAction;
-        this.targetStateId = targetStateId;
+        this.heartbeat = heartbeat;
         provider = () -> new Timer("Monitor " + state.toString());
     }
 
@@ -53,13 +40,13 @@ public class HeartbeatAbleState extends AbstractTimedState {
 		timer = provider.get();
 		TimerTask runHeartBeat = new TimerTask() {
 			public void run() {
-				if (heartBeatError.getAsBoolean()) {
+				if (heartbeat.getHeartBeatError().getAsBoolean()) {
 					listener.onHeartBeatError();
 					timer.cancel();
 				}
 			}
 		};
-		timer.schedule(runHeartBeat, period, period);
+		timer.schedule(runHeartBeat, heartbeat.getPeriod(), heartbeat.getPeriod());
 	}
 
 	@Override
@@ -70,7 +57,7 @@ public class HeartbeatAbleState extends AbstractTimedState {
 		// add heart beat exit condition
 		transitions.add(Transition.newBuilder(states).from(getId())
 			.event(SimpleStateMachine.InternalEvent.HEARTBEAT_ERROR)
-			.to(targetStateId).action(exitAction).build());
+			.to(heartbeat.getTargetStateId()).action(heartbeat.getExitAction()).build());
 		return transitions;
 	}
 }
