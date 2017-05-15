@@ -51,11 +51,14 @@ public class LiftDoorWithHeartBeatTest {
         // presence is detected
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.PRESENCE);
 
+        // wait
+        TimeUnit.MILLISECONDS.sleep(500);
+
         // Close the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.CLOSE);
 
 
-        // Wait, bell rings
+        // hum, can't be closed
         TimeUnit.MILLISECONDS.sleep(1200);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoorWithHeartBeat.State.OPENED_AND_RINGING);

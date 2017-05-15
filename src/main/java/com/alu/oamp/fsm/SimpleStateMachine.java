@@ -220,9 +220,11 @@ public class SimpleStateMachine implements TimedStateListener {
             Transition transition =
                     transitionMap.get(current.getId()).get(event.getId());
             if (transition != null) {
-
+                LOGGER.debug("Transition {} is found for event {}", transition, event);
                 if (!transition.getCondition().isPresent() || transition.getCondition().get().getAsBoolean()) {
                     executeTransition(event, transition);
+                } else {
+                    LOGGER.info("Event {} is guarded for state {}", event, current);
                 }
             } else {
                 LOGGER.info("Event {} is ignored for state {}", event, current);
