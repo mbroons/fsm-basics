@@ -25,7 +25,7 @@ public class SimpleLiftDoorTest {
     @Test
     public void test_door_times_out() throws InterruptedException {
 
-        liftDoor = SimpleLiftDoor.newLiftDoor(new DoorStateListener(queue));
+        liftDoor = SimpleLiftDoor.newLiftDoor(new SimpleStateListener(queue));
         liftDoor.fireEvent(SimpleLiftDoor.Cmd.OPEN);
         Assert.assertEquals(queue.poll(100, TimeUnit.MILLISECONDS),
                 SimpleLiftDoor.State.OPENED);
@@ -36,7 +36,7 @@ public class SimpleLiftDoorTest {
     @Test
     public void test_close_the_door() throws InterruptedException {
 
-        liftDoor = SimpleLiftDoor.newLiftDoor(new DoorStateListener(queue));
+        liftDoor = SimpleLiftDoor.newLiftDoor(new SimpleStateListener(queue));
         liftDoor.fireEvent(SimpleLiftDoor.Cmd.OPEN);
         Assert.assertEquals(queue.poll(100, TimeUnit.MILLISECONDS),
                 SimpleLiftDoor.State.OPENED);

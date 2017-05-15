@@ -25,7 +25,7 @@ public class LiftDoorWithHeartBeatTest {
     @Test
     public void test_door_can_be_closed() throws InterruptedException {
 
-        liftDoor = LiftDoorWithHeartBeat.newDoor(new DoorStateListener(queue));
+        liftDoor = LiftDoorWithHeartBeat.newDoor(new SimpleStateListener(queue));
 
         // Open the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.OPEN);
@@ -41,7 +41,7 @@ public class LiftDoorWithHeartBeatTest {
     @Test
     public void test_door_cant_be_closed() throws InterruptedException {
 
-        liftDoor = LiftDoorWithHeartBeat.newDoor(new DoorStateListener(queue));
+        liftDoor = LiftDoorWithHeartBeat.newDoor(new SimpleStateListener(queue));
 
         // Open the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.OPEN);
@@ -65,7 +65,7 @@ public class LiftDoorWithHeartBeatTest {
     @Test
     public void test_door_can_be_closed_after_ringing() throws InterruptedException {
 
-        liftDoor = LiftDoorWithHeartBeat.newDoor(new DoorStateListener(queue));
+        liftDoor = LiftDoorWithHeartBeat.newDoor(new SimpleStateListener(queue));
 
         // open the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.OPEN);

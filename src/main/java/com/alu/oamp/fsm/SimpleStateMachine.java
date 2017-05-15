@@ -1,10 +1,10 @@
 package com.alu.oamp.fsm;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +88,8 @@ public class SimpleStateMachine implements TimedStateListener {
     private final Map<StateId, Map<EventId, Transition>> transitionMap =
             new HashMap<>();
     private final EventProcessor eventProcessor;
+    private final ExecutorService internalTransitionExec = Executors.newCachedThreadPool();
+    private final List<Future<?>> transitionInstances = new ArrayList<>();
     private State current;
     final String name;
     private final CopyOnWriteArrayList<StateMachineListener> listeners = new CopyOnWriteArrayList<>();
@@ -154,11 +156,10 @@ public class SimpleStateMachine implements TimedStateListener {
      * shutdown the state machine
      */
     public void shutdown() {
-        states.values().stream().filter(state -> state instanceof TimedState).forEach(state -> {
-            ((TimedState) state).shutdown();
-        });
-        eventProcessor.shutdown();
         listeners.clear();
+        states.values().stream().filter(state -> state instanceof TimedState).forEach(state -> ((TimedState) state).shutdown());
+        eventProcessor.shutdown();
+        internalTransitionExec.shutdownNow();
     }
 
     /**
@@ -237,6 +238,9 @@ public class SimpleStateMachine implements TimedStateListener {
             State newState = transition.getToState();
             if (newState != null) {
 
+                LOGGER.debug("Terminate all running transitions for {}.", current);
+                terminateInternalTransitions();
+
                 LOGGER.debug("Leaving state {}.", current);
                 for (StateMachineListener listener : listeners) {
                     listener.onStateExited(current.getId());
@@ -250,9 +254,15 @@ public class SimpleStateMachine implements TimedStateListener {
                 }
                 current.onEntry();
             } else {
-                transition.run(event);
+                // internal transition. run by a specific executor.
+                transitionInstances.add(internalTransitionExec.submit(() -> transition.run(event)));
             }
         }
+    }
+
+    private void terminateInternalTransitions() {
+        transitionInstances.stream().filter(instance -> !instance.isDone()).forEach(instance -> instance.cancel(true));
+        transitionInstances.clear();
     }
 
     /**

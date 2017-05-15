@@ -35,13 +35,13 @@ public class SimpleLiftDoor {
         fsm.fireEvent(cmd);
     }
 
-    static SimpleLiftDoor newLiftDoor(DoorStateListener listener) {
+    static SimpleLiftDoor newLiftDoor(SimpleStateListener listener) {
         SimpleLiftDoor liftDoor = new SimpleLiftDoor();
         liftDoor.init(listener);
         return liftDoor;
     }
 
-    private SimpleStateMachine init(DoorStateListener listener) {
+    private SimpleStateMachine init(SimpleStateListener listener) {
 
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 

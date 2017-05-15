@@ -44,13 +44,13 @@ public class LiftDoorWithHeartBeat {
         CLOSED
     }
 
-    static LiftDoorWithHeartBeat newDoor(DoorStateListener listener) {
+    static LiftDoorWithHeartBeat newDoor(SimpleStateListener listener) {
         LiftDoorWithHeartBeat liftDoor = new LiftDoorWithHeartBeat();
         liftDoor.initWithHeartBeat(listener);
         return liftDoor;
     }
 
-    private SimpleStateMachine initWithHeartBeat(DoorStateListener listener) {
+    private SimpleStateMachine initWithHeartBeat(SimpleStateListener listener) {
 
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 

@@ -5,11 +5,11 @@ import java.util.concurrent.BlockingQueue;
 /**
  * A listener for door state change events
  */
-public class DoorStateListener implements StateMachineListener {
+public class SimpleStateListener implements StateMachineListener {
 
     private final BlockingQueue<StateId> queue;
 
-    DoorStateListener(BlockingQueue<StateId> queue) {
+    SimpleStateListener(BlockingQueue<StateId> queue) {
         this.queue = queue;
     }
 
