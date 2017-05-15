@@ -1,6 +1,8 @@
 package com.alu.oamp.fsm;
 
 import java.util.Set;
+import java.util.Timer;
+import java.util.function.Supplier;
 
 /**
  * A timed state.
@@ -57,6 +59,6 @@ public interface TimedState extends State {
 	 *            the time provider.
 	 *
 	 */
-	void setProvider(TimerProvider provider);
+	void setProvider(Supplier<Timer> provider);
 
 }

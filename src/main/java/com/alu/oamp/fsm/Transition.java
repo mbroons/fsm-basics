@@ -39,12 +39,12 @@ public class Transition {
 	 *            the transition condition
 	 */
 	private Transition(State fromState, EventId eventId, State toState,
-                       Object action, Optional<BooleanSupplier> condition) {
+                       Object action, BooleanSupplier condition) {
 		this.fromState = fromState;
 		this.eventId = eventId;
 		this.toState = toState;
         this.action = action;
-        this.condition = condition;
+        this.condition = Optional.ofNullable(condition);
 	}
 
 	/**
@@ -273,7 +273,7 @@ public class Transition {
 		public Transition build() {
 			checkNotNull(fromState, "fromState can't be null.");
 			checkNotNull(eventId, "eventId can't be null.");
-			return new Transition(fromState, eventId, toState, action, Optional.ofNullable(condition));
+			return new Transition(fromState, eventId, toState, action, condition);
 		}
 
 		private static void checkNotNull(Object object, String message) {

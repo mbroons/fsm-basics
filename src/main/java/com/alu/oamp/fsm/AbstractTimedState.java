@@ -3,14 +3,16 @@ package com.alu.oamp.fsm;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
+import java.util.function.Supplier;
 
 /**
- * A abstract active state.
+ * A abstract timed state.
  */
+
 public abstract class AbstractTimedState implements TimedState {
 
     protected final State state;
-    protected TimerProvider provider;
+    protected Supplier<Timer> provider;
     protected TimedStateListener listener;
     protected Timer timer;
 
@@ -65,8 +67,7 @@ public abstract class AbstractTimedState implements TimedState {
         this.listener = listener;
     }
 
-    @Override
-    public void setProvider(TimerProvider provider) {
+    public void setProvider(Supplier<Timer> provider) {
         this.provider = provider;
         if (state instanceof TimedState) {
             ((TimedState) state).setProvider(provider);
