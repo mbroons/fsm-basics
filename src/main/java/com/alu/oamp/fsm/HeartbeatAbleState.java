@@ -41,7 +41,7 @@ public class HeartbeatAbleState extends AbstractTimedState {
 		TimerTask runHeartBeat = new TimerTask() {
 			public void run() {
 				if (heartbeat.getHeartBeatError().getAsBoolean()) {
-					listener.onHeartBeatError();
+					listener.onHeartBeat();
 					timer.cancel();
 				}
 			}
@@ -56,7 +56,7 @@ public class HeartbeatAbleState extends AbstractTimedState {
 
 		// add heart beat exit condition
 		transitions.add(Transition.newBuilder(states).from(getId())
-			.event(SimpleStateMachine.InternalEvent.HEARTBEAT_ERROR)
+			.event(SimpleStateMachine.InternalEvent.HEARTBEAT)
 			.to(heartbeat.getTargetStateId()).action(heartbeat.getExitAction()).build());
 		return transitions;
 	}

@@ -36,6 +36,7 @@ public class States {
 
         private Optional<Timeout> timeout = Optional.empty();
 		private Optional<Heartbeat> heartbeat = Optional.empty();
+		private Optional<DefaultHeartbeat> defaultHeartbeat = Optional.empty();
 
 		/**
 		 * Creates a new state builder.
@@ -78,13 +79,24 @@ public class States {
 		}
 
         /**
-         * Specifies the state timeout.
+         * Specifies the state heart beat.
          *
          * @param heartbeat the heartbeat
          * @return the state builder
          */
         public Builder heartbeat(Heartbeat heartbeat) {
             this.heartbeat = Optional.ofNullable(heartbeat);
+            return this;
+        }
+
+        /**
+         * Specifies the state heart beat.
+         *
+         * @param heartbeat the default heartbeat
+         * @return the state builder
+         */
+        public Builder defaultHeartbeat(DefaultHeartbeat heartbeat) {
+            this.defaultHeartbeat = Optional.ofNullable(heartbeat);
             return this;
         }
 
@@ -97,6 +109,10 @@ public class States {
 
             if (heartbeat.isPresent()) {
                 built = new HeartbeatAbleState(built, heartbeat.get());
+            }
+
+            if (defaultHeartbeat.isPresent()) {
+                built = new DefaultHeartbeatAbleState(built, defaultHeartbeat.get());
             }
 
 			if (timeout.isPresent()) {

@@ -12,7 +12,7 @@ public interface TimedStateListener {
 	void onTimeout();
 
     /**
-     * Invoked when the heart beat failed
+     * Invoked when the heart beat period has elapsed.
      */
-    void onHeartBeatError();
+    void onHeartBeat();
 }

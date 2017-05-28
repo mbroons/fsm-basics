@@ -78,7 +78,7 @@ public class SimpleStateMachine implements TimedStateListener {
      */
     enum InternalEvent implements EventId {
         TIMEOUT,
-        HEARTBEAT_ERROR
+        HEARTBEAT
     }
 
     private static final Logger LOGGER =
@@ -148,8 +148,8 @@ public class SimpleStateMachine implements TimedStateListener {
     }
 
     @Override
-    public void onHeartBeatError() {
-        fireEvent(InternalEvent.HEARTBEAT_ERROR);
+    public void onHeartBeat() {
+        fireEvent(InternalEvent.HEARTBEAT);
     }
 
     /**
