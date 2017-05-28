@@ -29,7 +29,7 @@ public class SimpleLiftDoorTest {
         liftDoor.fireEvent(SimpleLiftDoor.Cmd.OPEN);
         Assert.assertEquals(queue.poll(100, TimeUnit.MILLISECONDS),
                 SimpleLiftDoor.State.OPENED);
-        Assert.assertEquals(queue.poll(1000, TimeUnit.MILLISECONDS),
+        Assert.assertEquals(queue.poll(2000, TimeUnit.MILLISECONDS),
                 SimpleLiftDoor.State.CLOSED);
     }
 
