@@ -52,14 +52,14 @@ public class LiftDoorWithHeartBeatTest {
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.PRESENCE);
 
         // wait
-        TimeUnit.MILLISECONDS.sleep(500);
+       TimeUnit.MILLISECONDS.sleep(500);
 
         // Close the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.CLOSE);
 
 
         // hum, can't be closed
-        TimeUnit.MILLISECONDS.sleep(1200);
+        TimeUnit.MILLISECONDS.sleep(6200);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoorWithHeartBeat.State.OPENED_AND_RINGING);
         Assert.assertTrue(liftDoor.isRinging());
@@ -79,7 +79,7 @@ public class LiftDoorWithHeartBeatTest {
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.PRESENCE);
 
         // Wait, bell rings
-        TimeUnit.MILLISECONDS.sleep(1200);
+        TimeUnit.MILLISECONDS.sleep(6200);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoorWithHeartBeat.State.OPENED_AND_RINGING);
         Assert.assertTrue(liftDoor.isRinging());

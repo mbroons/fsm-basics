@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.DefaultHeartbeat.buildWith;
+import static com.alu.oamp.fsm.Heartbeat.buildWith;
 
 /**
  * This is a simple stopwatch.
@@ -49,7 +49,7 @@ public class StopWatch {
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
         com.alu.oamp.fsm.State state = state(State.STARTED)
-                .defaultHeartbeat(buildWith()
+                .heartbeat(buildWith()
                         .period(1000)
                         .action(() -> System.out.println("Now is "+ new Date()))
                         .build())

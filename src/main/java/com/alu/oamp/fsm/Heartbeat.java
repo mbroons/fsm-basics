@@ -1,45 +1,29 @@
 package com.alu.oamp.fsm;
 
-import java.util.function.BooleanSupplier;
-
 /**
  * A state heartbeat
  */
 public class Heartbeat {
 
     private final long period;
-    private final BooleanSupplier heartBeatError;
-    private final Runnable exitAction;
-    private final StateId targetStateId;
+    private final Runnable action;
 
     /**
      * Creates an heartbeat
      * @param period the heartbeat period
-     * @param heartBeatError the heartbeat error function
-     * @param exitAction the action performed when exiting the state
-     * @param targetStateId the target state id
+     * @param action the action performed when exiting the state
      */
-    private Heartbeat(long period, BooleanSupplier heartBeatError, Runnable exitAction, StateId targetStateId) {
+    private Heartbeat(long period, Runnable action) {
         this.period = period;
-        this.heartBeatError = heartBeatError;
-        this.exitAction = exitAction;
-        this.targetStateId = targetStateId;
+        this.action = action;
     }
 
     public long getPeriod() {
         return period;
     }
 
-    public BooleanSupplier getHeartBeatError() {
-        return heartBeatError;
-    }
-
-    public Runnable getExitAction() {
-        return exitAction;
-    }
-
-    public StateId getTargetStateId() {
-        return targetStateId;
+    public Runnable getAction() {
+        return action;
     }
 
     public static Builder buildWith() {
@@ -49,9 +33,7 @@ public class Heartbeat {
     public static class Builder {
 
         private long period;
-        private BooleanSupplier heartBeatError;
-        private Runnable exitAction;
-        private StateId targetStateId;
+        private Runnable action;
 
         /**
          * Specifies the heart beat period.
@@ -65,35 +47,13 @@ public class Heartbeat {
         }
 
         /**
-         * Specifies the heart beat error function
+         * Specifies the heartbeat action.
          *
-         * @param condition the heart beat error function.
+         * @param action the heartbeat action
          * @return the state builder
          */
-        public Builder error(BooleanSupplier condition) {
-            this.heartBeatError = condition;
-            return this;
-        }
-
-        /**
-         * Specifies the action when exiting the state
-         *
-         * @param action the exit action
-         * @return the state builder
-         */
-        public Builder exitAction(Runnable action) {
-            this.exitAction = action;
-            return this;
-        }
-
-        /**
-         * Specifies the target state when the state has exited.
-         *
-         * @param targetStateId the target state
-         * @return the state builder
-         */
-        public Builder targetStateId(StateId targetStateId) {
-            this.targetStateId = targetStateId;
+        public Builder action(Runnable action) {
+            this.action = action;
             return this;
         }
 
@@ -102,7 +62,7 @@ public class Heartbeat {
          * @return the new heartbeat.
          */
         public Heartbeat build() {
-            return new Heartbeat(period, heartBeatError, exitAction, targetStateId);
+            return new Heartbeat(period, action);
         }
     }
 }

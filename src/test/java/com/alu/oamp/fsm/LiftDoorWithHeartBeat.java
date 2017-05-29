@@ -57,11 +57,11 @@ public class LiftDoorWithHeartBeat {
         com.alu.oamp.fsm.State state =
                 state(State.OPENED)
                         .heartbeat(Heartbeat.buildWith()
-                                .period(500).error(() -> closeable)
-                                .targetStateId(State.CLOSED)
+                                .period(1000)
+                                .action(() -> fireEvent(Cmd.CLOSE))
                                 .build())
                         .timeout(buildWith()
-                                .timeout(1000)
+                                .timeout(6000)
                                 .target(State.OPENED_AND_RINGING)
                                 .build())
                         .build();
@@ -72,21 +72,9 @@ public class LiftDoorWithHeartBeat {
                 .onEntry(() -> ringing = true)
                 .heartbeat(Heartbeat.buildWith()
                         .period(50)
-                        .error(() -> closeable)
-                        .targetStateId(State.CLOSED)
-                        .exitAction(() -> ringing = false)
+                        .action(() -> fireEvent(Cmd.CLOSE))
                         .build())
-                .build();
-        states.add(state);
-
-        state = state(State.OPENED_AND_RINGING)
-                .onEntry(() -> ringing = true)
-                .heartbeat(Heartbeat.buildWith()
-                        .period(50)
-                        .error(() -> closeable)
-                        .targetStateId(State.CLOSED)
-                        .exitAction(() -> ringing = false)
-                        .build())
+                .onExit(() -> ringing = false)
                 .build();
         states.add(state);
 
@@ -122,6 +110,16 @@ public class LiftDoorWithHeartBeat {
         transition =
                 Transition.newBuilder(states)
                         .from(State.OPENED)
+                        .event(Cmd.CLOSE)
+                        .when(() -> closeable)
+                        .to(State.CLOSED)
+                        .build();
+        transitions.add(transition);
+
+        // Transition to close the door if door is closeable
+        transition =
+                Transition.newBuilder(states)
+                        .from(State.OPENED_AND_RINGING)
                         .event(Cmd.CLOSE)
                         .when(() -> closeable)
                         .to(State.CLOSED)
