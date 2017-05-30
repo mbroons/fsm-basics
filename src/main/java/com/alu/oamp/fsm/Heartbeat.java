@@ -26,7 +26,7 @@ public class Heartbeat {
         return action;
     }
 
-    public static Builder buildWith() {
+    public static Builder newHeartbeat() {
         return new Builder();
     }
 

@@ -17,7 +17,7 @@ public class States {
 	 * @param stateId the state id
 	 * @return a new state builder.
 	 */
-	public static Builder state(StateId stateId) {
+	public static Builder newState(StateId stateId) {
 		return new Builder(stateId);
 	}
 	

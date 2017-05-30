@@ -12,8 +12,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.Timeout.buildWith;
+import static com.alu.oamp.fsm.States.newState;
+import static com.alu.oamp.fsm.Timeout.newTimeout;
 
 /**
  * This is a simple state machine for timeout feature validation
@@ -46,22 +46,18 @@ public class TimeoutTest {
         fsm.shutdown();
     }
 
-    public void fireEvent(Cmd cmd) {
-        fsm.fireEvent(cmd);
-    }
-
     private SimpleStateMachine init(SimpleStateListener listener) {
 
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
-        com.alu.oamp.fsm.State state = state(State.STATE_1)
+        com.alu.oamp.fsm.State state = newState(State.STATE_1)
                 .build();
         states.add(state);
         com.alu.oamp.fsm.State initial = state;
 
 
-        state = state(State.STATE_2)
-                .timeout(buildWith().timeout(1000).target(State.STATE_1).build())
+        state = newState(State.STATE_2)
+                .timeout(newTimeout().timeout(1000).target(State.STATE_1).build())
                 .build();
         states.add(state);
 
@@ -69,7 +65,7 @@ public class TimeoutTest {
 
         // Transition to open the door
         Transition transition =
-                Transition.newBuilder(states).from(State.STATE_1)
+                Transition.newTransition(states).from(State.STATE_1)
                         .event(Cmd.TO_STATE_2).to(State.STATE_2).build();
 
         transitions.add(transition);
@@ -84,7 +80,7 @@ public class TimeoutTest {
             }
         };
         transition =
-                Transition.newBuilder(states).from(State.STATE_2)
+                Transition.newTransition(states).from(State.STATE_2)
                         .event(Cmd.LONG_RUNNING_TASK).action(sleepAction).build();
         transitions.add(transition);
 

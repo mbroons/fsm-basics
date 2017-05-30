@@ -3,8 +3,9 @@ package com.alu.oamp.fsm;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.Timeout.buildWith;
+import static com.alu.oamp.fsm.States.newState;
+import static com.alu.oamp.fsm.Transition.newTransition;
+import static com.alu.oamp.fsm.Timeout.newTimeout;
 
 /**
  * This is a simple state machine simulating a lift door.
@@ -46,12 +47,12 @@ public class SimpleLiftDoor {
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
         // The door stays opened for 500 ms and closes itself.
-        com.alu.oamp.fsm.State state = state(State.OPENED)
-                .timeout(buildWith().timeout(1000).target(State.CLOSED).build())
+        com.alu.oamp.fsm.State state = newState(State.OPENED)
+                .timeout(newTimeout().timeout(1000).target(State.CLOSED).build())
                 .build();
         states.add(state);
 
-        state = state(State.CLOSED).build();
+        state = newState(State.CLOSED).build();
         com.alu.oamp.fsm.State initial = state;
         states.add(state);
 
@@ -59,12 +60,12 @@ public class SimpleLiftDoor {
 
         // Transition to open the door
         Transition transition =
-                Transition.newBuilder(states).from(State.CLOSED)
+                newTransition(states).from(State.CLOSED)
                         .event(Cmd.OPEN).to(State.OPENED).build();
 
         transitions.add(transition);
         transition =
-                Transition.newBuilder(states).from(State.OPENED)
+                newTransition(states).from(State.OPENED)
                         .event(Cmd.CLOSE).to(State.CLOSED).build();
         transitions.add(transition);
 

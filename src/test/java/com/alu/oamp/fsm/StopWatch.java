@@ -4,8 +4,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.Heartbeat.buildWith;
+import static com.alu.oamp.fsm.States.newState;
+import static com.alu.oamp.fsm.Transition.newTransition;
+import static com.alu.oamp.fsm.Heartbeat.newHeartbeat;
 
 /**
  * This is a simple stopwatch.
@@ -24,8 +25,7 @@ public class StopWatch {
 
     enum Cmd implements EventId {
         START,
-        STOP,
-        RESET
+        STOP
     }
 
     enum State implements StateId {
@@ -48,15 +48,15 @@ public class StopWatch {
 
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
-        com.alu.oamp.fsm.State state = state(State.STARTED)
-                .heartbeat(buildWith()
+        com.alu.oamp.fsm.State state = newState(State.STARTED)
+                .heartbeat(newHeartbeat()
                         .period(1000)
                         .action(() -> System.out.println("Now is "+ new Date()))
                         .build())
                 .build();
         states.add(state);
 
-        state = state(State.STOPPED).build();
+        state = newState(State.STOPPED).build();
         com.alu.oamp.fsm.State initial = state;
         states.add(state);
 
@@ -64,12 +64,12 @@ public class StopWatch {
 
         // Transition to open the door
         Transition transition =
-                Transition.newBuilder(states).from(State.STOPPED)
+                newTransition(states).from(State.STOPPED)
                         .event(Cmd.START).to(State.STARTED).build();
 
         transitions.add(transition);
         transition =
-                Transition.newBuilder(states).from(State.STARTED)
+                newTransition(states).from(State.STARTED)
                         .event(Cmd.STOP).to(State.STOPPED).build();
         transitions.add(transition);
 

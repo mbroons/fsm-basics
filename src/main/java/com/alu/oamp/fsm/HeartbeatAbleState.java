@@ -52,7 +52,7 @@ public class HeartbeatAbleState extends AbstractTimedState {
         Set<Transition> transitions = getInnerStateTransitions(states);
 
         // add heart beat transition
-        transitions.add(Transition.newBuilder(states).from(getId())
+        transitions.add(Transition.newTransition(states).from(getId())
                 .event(SimpleStateMachine.InternalEvent.HEARTBEAT).action(heartbeat.getAction()).build());
         return transitions;
     }

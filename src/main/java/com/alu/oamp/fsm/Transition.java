@@ -127,7 +127,7 @@ public class Transition {
 	 * @return the builder
 	 */
 	@SuppressWarnings("synthetic-access")
-	public static Builder newBuilder(Set<State> states) {
+	public static Builder newTransition(Set<State> states) {
 		Map<StateId, State> map = new HashMap<>();
 		for (State state : states) {
 			map.put(state.getId(), state);

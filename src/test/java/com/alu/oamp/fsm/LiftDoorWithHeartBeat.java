@@ -3,8 +3,8 @@ package com.alu.oamp.fsm;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.alu.oamp.fsm.States.state;
-import static com.alu.oamp.fsm.Timeout.buildWith;
+import static com.alu.oamp.fsm.States.newState;
+import static com.alu.oamp.fsm.Timeout.newTimeout;
 
 /**
  * A lift door with a heart beat state
@@ -55,12 +55,12 @@ public class LiftDoorWithHeartBeat {
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
         com.alu.oamp.fsm.State state =
-                state(State.OPENED)
-                        .heartbeat(Heartbeat.buildWith()
+                newState(State.OPENED)
+                        .heartbeat(Heartbeat.newHeartbeat()
                                 .period(1000)
                                 .action(() -> fireEvent(Cmd.CLOSE))
                                 .build())
-                        .timeout(buildWith()
+                        .timeout(newTimeout()
                                 .timeout(6000)
                                 .target(State.OPENED_AND_RINGING)
                                 .build())
@@ -68,9 +68,9 @@ public class LiftDoorWithHeartBeat {
         states.add(state);
 
         // Door is opened and ringing, when door closes stop the bell
-        state = state(State.OPENED_AND_RINGING)
+        state = newState(State.OPENED_AND_RINGING)
                 .onEntry(() -> ringing = true)
-                .heartbeat(Heartbeat.buildWith()
+                .heartbeat(Heartbeat.newHeartbeat()
                         .period(50)
                         .action(() -> fireEvent(Cmd.CLOSE))
                         .build())
@@ -78,13 +78,13 @@ public class LiftDoorWithHeartBeat {
                 .build();
         states.add(state);
 
-        state = state(State.CLOSED).build();
+        state = newState(State.CLOSED).build();
         com.alu.oamp.fsm.State initial = state;
         states.add(state);
 
         // Transition to open the door
         Set<Transition> transitions = new HashSet<>();
-        Transition transition = Transition.newBuilder(states)
+        Transition transition = Transition.newTransition(states)
                 .from(State.CLOSED)
                 .event(Cmd.OPEN)
                 .to(State.OPENED).build();
@@ -92,7 +92,7 @@ public class LiftDoorWithHeartBeat {
 
         // Transition for presence detection on opened state
         transition =
-                Transition.newBuilder(states)
+                Transition.newTransition(states)
                         .from(State.OPENED)
                         .event(Cmd.PRESENCE)
                         .action(() -> closeable = false).build();
@@ -100,7 +100,7 @@ public class LiftDoorWithHeartBeat {
 
         // Transition for absence detection on opened state
         transition =
-                Transition.newBuilder(states)
+                Transition.newTransition(states)
                         .from(State.OPENED)
                         .event(Cmd.ABSENCE)
                         .action(() -> closeable = true).build();
@@ -108,7 +108,7 @@ public class LiftDoorWithHeartBeat {
 
         // Transition to close the door if door is closeable
         transition =
-                Transition.newBuilder(states)
+                Transition.newTransition(states)
                         .from(State.OPENED)
                         .event(Cmd.CLOSE)
                         .when(() -> closeable)
@@ -118,7 +118,7 @@ public class LiftDoorWithHeartBeat {
 
         // Transition to close the door if door is closeable
         transition =
-                Transition.newBuilder(states)
+                Transition.newTransition(states)
                         .from(State.OPENED_AND_RINGING)
                         .event(Cmd.CLOSE)
                         .when(() -> closeable)
@@ -128,7 +128,7 @@ public class LiftDoorWithHeartBeat {
 
         // Transition for presence detection on opened and ringing state state
         transition =
-                Transition.newBuilder(states)
+                Transition.newTransition(states)
                         .from(State.OPENED_AND_RINGING)
                         .event(Cmd.ABSENCE)
                         .action(() -> closeable = true).build();
