@@ -4,11 +4,9 @@ package com.alu.oamp.fsm;
  *
  * A state machine transition action with an input value.
  *
- * @param <T>
- *            the input parameter type
  *
  */
-public interface Action<T> {
+public interface Action {
 
 	/**
 	 * Executes the action.
@@ -16,6 +14,7 @@ public interface Action<T> {
 	 * @param message
 	 *            the message used when firing the transaction.
 	 */
-	void run(T message);
+	// FIXME would it be possible to type the message ?
+	void run(Object message);
 
 }

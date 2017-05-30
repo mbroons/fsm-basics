@@ -178,6 +178,7 @@ public class SimpleStateMachine implements TimedStateListener {
      * @param eventId the event id
      * @param message the event message
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void fireEvent(EventId eventId, Object message) {
 
         fireEvent(new Event(eventId, message));
@@ -237,8 +238,8 @@ public class SimpleStateMachine implements TimedStateListener {
 
         @SuppressWarnings("synthetic-access")
         private void executeTransition(Event event, Transition transition) {
-            State newState = transition.getToState();
-            if (newState != null) {
+            Optional<State> newState = transition.getToState();
+            if (newState.isPresent()) {
 
                 LOGGER.debug("Terminate all running transitions for {}.", current);
                 terminateInternalTransitions();
@@ -249,7 +250,7 @@ public class SimpleStateMachine implements TimedStateListener {
                 }
                 current.onExit();
                 transition.run(event);
-                current = newState;
+                current = newState.get();
                 LOGGER.debug("Entering state {}.", current);
                 for (StateMachineListener listener : listeners) {
                     listener.onStateEntered(current.getId());
@@ -332,11 +333,6 @@ public class SimpleStateMachine implements TimedStateListener {
     void fireEventSync(EventId eventId) {
 
         fireEventSync(new Event(eventId));
-    }
-
-    void fireEventSync(EventId eventId, Object message) {
-
-        fireEventSync(new Event(eventId, message));
     }
 
     private void fireEventSync(Event event) {

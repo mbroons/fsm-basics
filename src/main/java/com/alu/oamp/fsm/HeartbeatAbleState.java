@@ -9,7 +9,10 @@ import java.util.TimerTask;
  * An heartbeat able state implements an heart beat mechanism.
  * </p>
  * <p>
- * The client application provides an heart beat function that will be regularly invoked.
+ * The client application provides a function that will be invoked at regular intervals.
+ * The heartbeat functions gets executed as any internal transitions.
+ * It is possible to trigger events from the heartbeat functions, allowing mechanism such as
+ * exit the state when a periodically checked conditions applies.
  * </p>
  */
 public class HeartbeatAbleState extends AbstractTimedState {

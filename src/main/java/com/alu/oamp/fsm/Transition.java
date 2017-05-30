@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +19,11 @@ public class Transition {
 	private static final Logger LOGGER =
 		LoggerFactory.getLogger(Transition.class);
 
-	private final State toState;
 	private final EventId eventId;
 	private final State fromState;
 	private final Object action;
-    private final Optional<BooleanSupplier> condition;
+	private final State toState;
+    private final BooleanSupplier condition;
 
     /**
 	 * Creates a new transition.
@@ -44,16 +45,16 @@ public class Transition {
 		this.eventId = eventId;
 		this.toState = toState;
         this.action = action;
-        this.condition = Optional.ofNullable(condition);
+        this.condition = condition;
 	}
 
 	/**
-	 * Returns the transition target state.
+	 * Returns the transition target state via an optional.
 	 *
 	 * @return the transition target state.
 	 */
-	State getToState() {
-		return toState;
+	Optional<State> getToState() {
+		return Optional.ofNullable(toState);
 	}
 
 	/**
@@ -80,7 +81,7 @@ public class Transition {
      * @return the transition condition
      */
     Optional<BooleanSupplier> getCondition() {
-        return condition;
+        return Optional.ofNullable(condition);
     }
 
 
@@ -227,7 +228,6 @@ public class Transition {
 		/**
 		 * Specifies the transition action.
 		 *
-		 * The action does not take any input parameter.
 		 *
 		 * @param action
 		 *            the action runnable
@@ -237,6 +237,21 @@ public class Transition {
 			this.action = action;
 			return this;
 		}
+
+        /**
+         * Specifies the transition action.
+         *
+         * The action consumes the input parameter sent when firing the event.
+         *
+         * @param action
+         *            the action runnable
+         * @return the builder
+         */
+        public Builder consume(Action action) {
+            this.action = action;
+            return this;
+        }
+
 
         /**
          * Specifies the transition condition.
@@ -249,21 +264,6 @@ public class Transition {
             this.condition = condition;
             return this;
         }
-
-		/**
-		 * Specifies the transition action.
-		 *
-		 * The action takes as an input parameter the message sent when firing
-		 * the event.
-		 *
-		 * @param action
-		 *            the action runnable
-		 * @return the builder
-		 */
-		public Builder actionMessage(Action<?> action) {
-			this.action = action;
-			return this;
-		}
 
 		/**
 		 * Builds the transition.

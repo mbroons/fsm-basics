@@ -5,7 +5,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * A timeout able state times out if the state is active for more than the timeout duration
+ * A timeout able state times out if the state is active for more than the timeout duration.
  */
 public class TimeoutAbleState extends AbstractTimedState {
 

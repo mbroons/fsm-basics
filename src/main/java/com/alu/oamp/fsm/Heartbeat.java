@@ -1,7 +1,7 @@
 package com.alu.oamp.fsm;
 
 /**
- * A state heartbeat
+ * A heartbeat specification
  */
 public class Heartbeat {
 
