@@ -23,7 +23,7 @@ public class StopWatchTest {
     }
 
     @Test
-    public void test_watch() throws InterruptedException {
+    public void test_watch_is_basically_working() throws InterruptedException {
 
         stopWatch = StopWatch.newStopWatch(new SimpleStateListener(queue));
         stopWatch.fireEvent(StopWatch.Cmd.START);
