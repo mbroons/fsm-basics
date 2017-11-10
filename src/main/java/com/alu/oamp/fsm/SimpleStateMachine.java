@@ -67,8 +67,8 @@ import org.slf4j.LoggerFactory;
  * </p>
  * <p/>
  * <p>
- * When defining a state with heartbeat, one has to specify the exit polling period,
- * the heartbeat worker and the target state to enter on heartbeat error.
+ * When defining a state with heartbeat, one has to specify the heartbeat polling period,
+ * the heartbeat worker and the target state to enter on exiting the heartbeat.
  * </p>
  */
 public class SimpleStateMachine implements TimedStateListener {
@@ -91,7 +91,7 @@ public class SimpleStateMachine implements TimedStateListener {
     private final ExecutorService internalTransitionExec = Executors.newCachedThreadPool();
     private final List<Future<?>> transitionInstances = new ArrayList<>();
     private State current;
-    final String name;
+    private final String name;
     private final CopyOnWriteArrayList<StateMachineListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
@@ -157,7 +157,9 @@ public class SimpleStateMachine implements TimedStateListener {
      */
     public void shutdown() {
         listeners.clear();
-        states.values().stream().filter(state -> state instanceof TimedState).forEach(state -> ((TimedState) state).shutdown());
+        states.values().stream()
+                .filter(state -> state instanceof TimedState)
+                .forEach(state -> ((TimedState) state).shutdown());
         eventProcessor.shutdown();
         internalTransitionExec.shutdownNow();
     }
@@ -264,7 +266,9 @@ public class SimpleStateMachine implements TimedStateListener {
     }
 
     private void terminateInternalTransitions() {
-        transitionInstances.stream().filter(instance -> !instance.isDone()).forEach(instance -> instance.cancel(true));
+        transitionInstances.stream()
+                .filter(instance -> !instance.isDone())
+                .forEach(instance -> instance.cancel(true));
         transitionInstances.clear();
     }
 
