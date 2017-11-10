@@ -44,7 +44,7 @@ public class StopWatch {
         return stopWatch;
     }
 
-    private SimpleStateMachine init(SimpleStateListener listener) {
+    private void init(SimpleStateListener listener) {
 
         Set<com.alu.oamp.fsm.State> states = new HashSet<>();
 
@@ -62,7 +62,6 @@ public class StopWatch {
 
         Set<Transition> transitions = new HashSet<>();
 
-        // Transition to open the door
         Transition transition =
                 newTransition(states).from(State.STOPPED)
                         .event(Cmd.START).to(State.STARTED).build();
@@ -75,7 +74,6 @@ public class StopWatch {
 
         fsm = new SimpleStateMachine(states, transitions, "Simple Stop Watch", initial);
         fsm.addStateMachineListener(listener);
-        return fsm;
     }
 
 
