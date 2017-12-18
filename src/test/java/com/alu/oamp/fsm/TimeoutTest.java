@@ -38,7 +38,7 @@ public class TimeoutTest {
     }
 
     @BeforeClass
-    public void setup() {
+    public void setUp() {
         fsm =  init(new SimpleStateListener(queue));
     }
 
