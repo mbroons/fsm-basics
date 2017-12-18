@@ -19,7 +19,9 @@ public class LiftDoorWithHeartBeatTest {
 
     @AfterMethod
     public void tearDown() {
+
         liftDoor.shutdown();
+        queue.clear();
     }
 
     @Test
