@@ -43,7 +43,7 @@ public class TimeoutAbleState extends AbstractTimedState {
 
         Set<Transition> transitions = getInnerStateTransitions(states);
 
-        // add exit monitoring transition
+        // add timeout transition
         transitions.add(Transition.newTransition(states).from(getId())
                 .event(SimpleStateMachine.InternalEvent.TIMEOUT)
                 .to(timeout.getTargetStateId())
