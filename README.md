@@ -4,7 +4,7 @@
 
 
 This is inspired by the [scxml specification](https://www.w3.org/TR/scxml/).
-Yep, There is already a lot of state machine [implementations](https://projects.spring.io/spring-statemachine/) out there.
-But we did not need a full blown state machine (No compound states, No parallel states).
+There is already a lot of state machine [implementations](https://projects.spring.io/spring-statemachine/) out there.
+This one is minimal (No compound states, No parallel states).
 
 This implementation uses JDK 1.8 and is built with Maven 3.
