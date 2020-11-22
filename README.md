@@ -8,4 +8,3 @@ There is already a lot of state machine [implementations](https://projects.sprin
 This one is minimal (No compound states, No parallel states).
 
 This implementation uses JDK 1.8 and is built with Maven 3.
-
