@@ -5,28 +5,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
- * A state with timeout.
+ * A timeout able state times out if the state is active for more than the timeout duration.
  */
-public class StateWithTimeout extends AbstractActiveState {
+public class TimeoutAbleState extends AbstractTimedState {
 
-    private final long timeout;
-    private final Runnable timeoutAction;
-    private final StateId timeoutStateId;
+    private final Timeout timeout;
 
     /**
      * Creates a new state with timeout.
      *
      * @param innerState     the inner state.
-     * @param timeout        the transient state timeout
-     * @param timeoutAction  the transient state timeout action
-     * @param timeoutStateId the target state on timeout
+     * @param timeout        the timeout specification
      */
-    StateWithTimeout(State innerState, long timeout, Runnable timeoutAction,
-                     StateId timeoutStateId) {
+    TimeoutAbleState(State innerState, Timeout timeout) {
         super(innerState);
         this.timeout = timeout;
-        this.timeoutAction = timeoutAction;
-        this.timeoutStateId = timeoutStateId;
         provider = () -> new Timer("Timer " + state.toString());
     }
 
@@ -41,7 +34,7 @@ public class StateWithTimeout extends AbstractActiveState {
                 listener.onTimeout();
             }
         };
-        timer.schedule(task, timeout);
+        timer.schedule(task, timeout.getTimeout());
     }
 
 
@@ -50,11 +43,11 @@ public class StateWithTimeout extends AbstractActiveState {
 
         Set<Transition> transitions = getInnerStateTransitions(states);
 
-        // add exit monitoring transition
-        transitions.add(Transition.newBuilder(states).from(getId())
+        // add timeout transition
+        transitions.add(Transition.newTransition(states).from(getId())
                 .event(SimpleStateMachine.InternalEvent.TIMEOUT)
-                .to(timeoutStateId)
-                .action(timeoutAction).build());
+                .to(timeout.getTargetStateId())
+                .action(timeout.getAction()).build());
         return transitions;
     }
 }

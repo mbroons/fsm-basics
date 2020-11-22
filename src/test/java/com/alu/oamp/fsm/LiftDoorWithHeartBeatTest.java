@@ -19,22 +19,58 @@ public class LiftDoorWithHeartBeatTest {
 
     @AfterMethod
     public void tearDown() {
+
         liftDoor.shutdown();
+        queue.clear();
     }
 
     @Test
-    public void testHeartBeat() throws InterruptedException {
+    public void test_door_can_be_closed() throws InterruptedException {
 
-        liftDoor = LiftDoorWithHeartBeat.newDoor(new DoorStateListener(queue));
+        liftDoor = LiftDoorWithHeartBeat.newDoor(new SimpleStateListener(queue));
 
         // Open the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.OPEN);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoorWithHeartBeat.State.OPENED);
 
-        // Wait, the door closes
+        // Close the door
+        liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.CLOSE);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoorWithHeartBeat.State.CLOSED);
+    }
+
+    @Test
+    public void test_door_cant_be_closed() throws InterruptedException {
+
+        liftDoor = LiftDoorWithHeartBeat.newDoor(new SimpleStateListener(queue));
+
+        // Open the door
+        liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.OPEN);
+        Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
+                LiftDoorWithHeartBeat.State.OPENED);
+
+        // presence is detected
+        liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.PRESENCE);
+
+        // wait
+       TimeUnit.MILLISECONDS.sleep(500);
+
+        // Close the door
+        liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.CLOSE);
+
+
+        // hum, can't be closed
+        TimeUnit.MILLISECONDS.sleep(6200);
+        Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
+                LiftDoorWithHeartBeat.State.OPENED_AND_RINGING);
+        Assert.assertTrue(liftDoor.isRinging());
+    }
+
+    @Test
+    public void test_door_can_be_closed_after_ringing() throws InterruptedException {
+
+        liftDoor = LiftDoorWithHeartBeat.newDoor(new SimpleStateListener(queue));
 
         // open the door
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.OPEN);
@@ -45,7 +81,7 @@ public class LiftDoorWithHeartBeatTest {
         liftDoor.fireEvent(LiftDoorWithHeartBeat.Cmd.PRESENCE);
 
         // Wait, bell rings
-        TimeUnit.MILLISECONDS.sleep(1200);
+        TimeUnit.MILLISECONDS.sleep(6200);
         Assert.assertEquals(queue.poll(200, TimeUnit.MILLISECONDS),
                 LiftDoorWithHeartBeat.State.OPENED_AND_RINGING);
         Assert.assertTrue(liftDoor.isRinging());

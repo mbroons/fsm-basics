@@ -4,7 +4,7 @@ package com.alu.oamp.fsm;
  * A timeout listener.
  *
  */
-public interface TimeoutListener {
+public interface TimedStateListener {
 
     /**
      * Invoked when the state has timed out.
@@ -12,7 +12,7 @@ public interface TimeoutListener {
 	void onTimeout();
 
     /**
-     * Invoked when the heart beat failed
+     * Invoked when the heart beat period has elapsed.
      */
-    void onHeartBeatError();
+    void onHeartBeat();
 }

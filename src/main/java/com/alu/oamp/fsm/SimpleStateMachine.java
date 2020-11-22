@@ -1,10 +1,10 @@
 package com.alu.oamp.fsm;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,18 +67,18 @@ import org.slf4j.LoggerFactory;
  * </p>
  * <p/>
  * <p>
- * When defining a state with heartbeat, one has to specify the exit polling period,
- * the heartbeat worker and the target state to enter on heartbeat error.
+ * When defining a state with heartbeat, one has to specify the heartbeat polling period,
+ * the heartbeat worker and the target state to enter on exiting the heartbeat.
  * </p>
  */
-public class SimpleStateMachine implements TimeoutListener {
+public class SimpleStateMachine implements TimedStateListener {
 
     /**
      * State machine internal events
      */
     enum InternalEvent implements EventId {
         TIMEOUT,
-        HEARTBEAT_ERROR
+        HEARTBEAT
     }
 
     private static final Logger LOGGER =
@@ -88,8 +88,10 @@ public class SimpleStateMachine implements TimeoutListener {
     private final Map<StateId, Map<EventId, Transition>> transitionMap =
             new HashMap<>();
     private final EventProcessor eventProcessor;
+    private final ExecutorService internalTransitionExec = Executors.newCachedThreadPool();
+    private final List<Future<?>> transitionInstances = new ArrayList<>();
     private State current;
-    final String name;
+    private final String name;
     private final CopyOnWriteArrayList<StateMachineListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
@@ -114,10 +116,10 @@ public class SimpleStateMachine implements TimeoutListener {
             transitionMap.put(state.getId(),
                     new HashMap<>());
 
-            if (state instanceof ActiveState) {
-                ((ActiveState) state).setActiveStateListener(this);
+            if (state instanceof TimedState) {
+                ((TimedState) state).setActiveStateListener(this);
                 internalTransitions
-                        .addAll(((ActiveState) state).getInternal(states));
+                        .addAll(((TimedState) state).getInternal(states));
             }
         }
 
@@ -133,7 +135,7 @@ public class SimpleStateMachine implements TimeoutListener {
                     .put(trans.getEventId(), trans);
         }
         this.current = initial;
-        eventProcessor = new EventProcessor("FSM " + name );
+        eventProcessor = new EventProcessor("FSM " + name);
     }
 
     public void addStateMachineListener(StateMachineListener listener) {
@@ -146,21 +148,20 @@ public class SimpleStateMachine implements TimeoutListener {
     }
 
     @Override
-    public void onHeartBeatError() {
-        fireEvent(InternalEvent.HEARTBEAT_ERROR);
+    public void onHeartBeat() {
+        fireEvent(InternalEvent.HEARTBEAT);
     }
 
     /**
      * shutdown the state machine
      */
     public void shutdown() {
-        for (State state : states.values()) {
-            if (state instanceof ActiveState) {
-                ((ActiveState) state).shutdown();
-            }
-        }
-        eventProcessor.shutdown();
         listeners.clear();
+        states.values().stream()
+                .filter(state -> state instanceof TimedState)
+                .forEach(state -> ((TimedState) state).shutdown());
+        eventProcessor.shutdown();
+        internalTransitionExec.shutdownNow();
     }
 
     /**
@@ -179,6 +180,7 @@ public class SimpleStateMachine implements TimeoutListener {
      * @param eventId the event id
      * @param message the event message
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void fireEvent(EventId eventId, Object message) {
 
         fireEvent(new Event(eventId, message));
@@ -221,8 +223,12 @@ public class SimpleStateMachine implements TimeoutListener {
             Transition transition =
                     transitionMap.get(current.getId()).get(event.getId());
             if (transition != null) {
-
-                executeTransition(event, transition);
+                LOGGER.debug("Transition {} is found for event {}", transition, event);
+                if (!transition.getCondition().isPresent() || transition.getCondition().get().getAsBoolean()) {
+                    executeTransition(event, transition);
+                } else {
+                    LOGGER.info("Event {} is guarded for state {}", event, current);
+                }
             } else {
                 LOGGER.info("Event {} is ignored for state {}", event, current);
             }
@@ -234,8 +240,11 @@ public class SimpleStateMachine implements TimeoutListener {
 
         @SuppressWarnings("synthetic-access")
         private void executeTransition(Event event, Transition transition) {
-            State newState = transition.getToState();
-            if (newState != null) {
+            Optional<State> newState = transition.getToState();
+            if (newState.isPresent()) {
+
+                LOGGER.debug("Terminate all running transitions for {}.", current);
+                terminateInternalTransitions();
 
                 LOGGER.debug("Leaving state {}.", current);
                 for (StateMachineListener listener : listeners) {
@@ -243,16 +252,24 @@ public class SimpleStateMachine implements TimeoutListener {
                 }
                 current.onExit();
                 transition.run(event);
-                current = newState;
+                current = newState.get();
                 LOGGER.debug("Entering state {}.", current);
                 for (StateMachineListener listener : listeners) {
                     listener.onStateEntered(current.getId());
                 }
                 current.onEntry();
             } else {
-                transition.run(event);
+                // internal transition. run by a specific executor.
+                transitionInstances.add(internalTransitionExec.submit(() -> transition.run(event)));
             }
         }
+    }
+
+    private void terminateInternalTransitions() {
+        transitionInstances.stream()
+                .filter(instance -> !instance.isDone())
+                .forEach(instance -> instance.cancel(true));
+        transitionInstances.clear();
     }
 
     /**
@@ -320,11 +337,6 @@ public class SimpleStateMachine implements TimeoutListener {
     void fireEventSync(EventId eventId) {
 
         fireEventSync(new Event(eventId));
-    }
-
-    void fireEventSync(EventId eventId, Object message) {
-
-        fireEventSync(new Event(eventId, message));
     }
 
     private void fireEventSync(Event event) {

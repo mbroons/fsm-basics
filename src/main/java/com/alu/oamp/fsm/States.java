@@ -1,6 +1,6 @@
 package com.alu.oamp.fsm;
 
-import java.util.function.BooleanSupplier;
+import java.util.Optional;
 
 /**
  * Utility class to create states.
@@ -17,7 +17,7 @@ public class States {
 	 * @param stateId the state id
 	 * @return a new state builder.
 	 */
-	public static Builder newBuilder(StateId stateId) {
+	public static Builder newState(StateId stateId) {
 		return new Builder(stateId);
 	}
 	
@@ -34,14 +34,8 @@ public class States {
 		private Runnable onEntry;
 		private Runnable onExit;
 
-        private long timeout;
-        private StateId timeoutStateId;
-        private Runnable onTimeout;
-
-        private long period;
-        private BooleanSupplier heartBeatWorker;
-        private Runnable exitAction;
-        private StateId exitStateId;
+        private Optional<Timeout> timeout = Optional.empty();
+		private Optional<Heartbeat> heartbeat = Optional.empty();
 
 		/**
 		 * Creates a new state builder.
@@ -73,103 +67,41 @@ public class States {
 		}
 		
 		/**
-		 * Specifies the state timeout value for a state with timeout.
+		 * Specifies the state timeout.
 		 * 
-		 * @param timeout the timeout value
+		 * @param timeout the timeout
 		 * @return the state builder
 		 */
-		public Builder timeout(long timeout) {
-			this.timeout = timeout;
-			return this;
-		}
-		
-		/**
-		 * Specifies the action to invoke when a state times out.
-		 * 
-		 * @param onTimeout the timeout action
-		 * @return the state builder
-		 */
-		public Builder onTimeout(Runnable onTimeout) {
-			this.onTimeout = onTimeout;
-			return this;
-		}
-		
-		/**
-		 * Specifies the target state when a state times out.
-		 * 
-		 * @param targetStateId the target state on timeout
-		 * @return the state builder
-		 */
-		public Builder timeoutTarget(StateId targetStateId) {
-			this.timeoutStateId = targetStateId;
+		public Builder timeout(Timeout timeout) {
+			this.timeout = Optional.ofNullable(timeout);
 			return this;
 		}
 
-        /**
-         * Specifies the monitoring period for a state with monitoring.
-         *
-         * @param period the monitoring period
-         * @return the state builder
-         */
-        public Builder heartBeatPeriod(long period) {
-            this.period = period;
-            return this;
-        }
 
         /**
-         * Specifies the heart beat worker
+         * Specifies the state heart beat.
          *
-         * @param heartBeatWorker the heart beat worker.
+         * @param heartbeat the heartbeat
          * @return the state builder
          */
-        public Builder heartBeatWorker(BooleanSupplier heartBeatWorker) {
-            this.heartBeatWorker = heartBeatWorker;
+        public Builder heartbeat(Heartbeat heartbeat) {
+            this.heartbeat = Optional.ofNullable(heartbeat);
             return this;
         }
-
-        /**
-         * Specifies the action to invoke when state is exited due
-         * to monitoring
-         *
-         * @param action the exit monitoring action
-         * @return the state builder
-         */
-        public Builder exitAction(Runnable action) {
-            this.exitAction = action;
-            return this;
-        }
-
-        /**
-         * Specifies the target state when the state has exited due to time out on heart beat.
-         *
-         * @param exitStateId the target state
-         * @return the state builder
-         */
-        public Builder heartBeatTimeoutTarget(StateId exitStateId) {
-            this.exitStateId = exitStateId;
-            return this;
-        }
-		
 
 		/**
 		 * Builds the state.
 		 * @return the new state.
 		 */
 		public State build() {
-            BaseState state = new BaseState(stateId, onEntry, onExit);
-            State built = state;
+            State built = new BaseState(stateId, onEntry, onExit);
 
-            if (period != 0) {
-                // This is a state with monitoring
-                checkNotNull(exitStateId, "Target state for monitored state can't be null");
-                checkNotNull(heartBeatWorker, "State with heart beat can't have null heart beat worker");
-                built = new StateWithHeartBeat(state, period, exitStateId, heartBeatWorker, exitAction);
+            if (heartbeat.isPresent()) {
+                built = new HeartbeatAbleState(built, heartbeat.get());
             }
-			
-			if (timeout != 0) {
-				// This is a state with timeout
-				checkNotNull(timeoutStateId, "Target state on timeout can't be null");
-                built = new StateWithTimeout(built, timeout, onTimeout, timeoutStateId);
+
+			if (timeout.isPresent()) {
+                built = new TimeoutAbleState(built, timeout.get());
 			}
 			return built;
 		}
@@ -180,5 +112,4 @@ public class States {
 			}
 		}
 	}
-
 }
